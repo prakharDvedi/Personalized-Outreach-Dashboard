@@ -12,7 +12,7 @@ const betterAuthUrl = process.env.BETTER_AUTH_URL;
 const betterAuthSecret = process.env.BETTER_AUTH_SECRET;
 
 if (!connectionString) {
-  throw new Error("database Url is required");
+  console.warn("DATABASE_URL is not set")
 }
 
 if (!betterAuthSecret) {
