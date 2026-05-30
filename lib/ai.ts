@@ -24,7 +24,7 @@ type OpenRouterChunk = {
   }>;
 };
 
-const DEFAULT_MODEL = "deepseek/deepseek-v3-0324:free";
+const DEFAULT_MODEL = "openrouter/owl-alpha";
 const DEFAULT_TEMPERATURE = 0.85;
 const DEFAULT_MAX_TOKENS = 400;
 
