@@ -1,38 +1,51 @@
-// auth file - uses better auth
-
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
+import { db } from "@/db";
 import * as schema from "@/db/schema";
 
-const connectionString = process.env.DATABASE_URL;
-const betterAuthUrl = process.env.BETTER_AUTH_URL;
-const betterAuthSecret = process.env.BETTER_AUTH_SECRET;
+type AuthClient = ReturnType<typeof betterAuth>;
 
-if (!connectionString) {
-  console.warn("DATABASE_URL is not set")
+let cachedAuth: AuthClient | null = null;
+
+function getRequiredEnv(name: string) {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name} is required`);
+  }
+  return value;
 }
 
-if (!betterAuthSecret) {
-  console.warn("BETTER_AUTH_SECRET is not set")
+function createAuthClient(): AuthClient {
+  const baseURL = getRequiredEnv("BETTER_AUTH_URL");
+  const secret = getRequiredEnv("BETTER_AUTH_SECRET");
+
+  return betterAuth({
+    secret,
+    baseURL,
+    trustedOrigins: [baseURL],
+    plugins: [nextCookies()],
+    database: drizzleAdapter(db, {
+      provider: "pg",
+      schema,
+      usePlural: true,
+    }),
+    emailAndPassword: {
+      enabled: true,
+    },
+  }) as unknown as AuthClient;
 }
 
-const pool = new Pool({ connectionString });
-const db = drizzle(pool, { schema });
+export function getAuth(): AuthClient {
+  if (!cachedAuth) {
+    cachedAuth = createAuthClient();
+  }
+  return cachedAuth;
+}
 
-export const auth = betterAuth({
-  secret: betterAuthSecret,
-  baseURL: betterAuthUrl,
-  trustedOrigins: betterAuthUrl ? [betterAuthUrl] : [],
-  plugins: [nextCookies()],
-  database: drizzleAdapter(db, {
-    provider: "pg",
-    schema,
-    usePlural: true,
-  }),
-  emailAndPassword: {
-    enabled: true,
+export const auth = new Proxy({} as AuthClient, {
+  get(_target, prop) {
+    const client = getAuth() as AuthClient & Record<PropertyKey, unknown>;
+    return client[prop];
   },
-});
+}) as AuthClient;

@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "migrate": "drizzle-kit migrate --config drizzle.config.ts",
     "lint": "eslint"
   },
   "dependencies": {

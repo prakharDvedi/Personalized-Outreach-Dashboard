@@ -1,27 +1,40 @@
-// for preventing multiple instances of pg pool 
-
 import { drizzle } from "drizzle-orm/node-postgres";
+import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "./schema";
 
-const connectionString = process.env.DATABASE_URL ?? ""
+type DbClient = NodePgDatabase<typeof schema>;
 
-if (!connectionString && process.env.NODE_ENV === "production") {
-  console.warn("DATABASE_URL is not set — database calls will fail at runtime")
+let cachedDb: DbClient | null = null;
+
+function getConnectionString() {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("DATABASE_URL is required");
+  }
+  return connectionString;
 }
 
-const globalForDb = globalThis as typeof globalThis & {
-  pgPool?: Pool;
-};
-
-const pool =
-  globalForDb.pgPool ??
-  new Pool({
-    connectionString,
+function createDbClient(): DbClient {
+  const pool = new Pool({
+    connectionString: getConnectionString(),
   });
 
-if (process.env.NODE_ENV !== "production") {
-  globalForDb.pgPool = pool;
+  return drizzle(pool, { schema });
 }
 
-export const db = drizzle(pool, { schema });
+export function getDb(): DbClient {
+  if (cachedDb) {
+    return cachedDb;
+  }
+
+  cachedDb = createDbClient();
+  return cachedDb;
+}
+
+export const db = new Proxy({} as DbClient, {
+  get(_target, prop) {
+    const client = getDb() as DbClient & Record<PropertyKey, unknown>;
+    return client[prop];
+  },
+}) as DbClient;
