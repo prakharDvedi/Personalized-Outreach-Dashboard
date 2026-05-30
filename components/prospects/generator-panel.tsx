@@ -31,10 +31,10 @@ export function GeneratorPanel({
   const messageActions = useMessageActions(generation.messages, generation.setMessages);
 
   return (
-    <section className="space-y-4 rounded-xl border border-gray-200 p-4">
+    <section className="space-y-4 rounded-xl border border-white-200 p-4">
       <div>
         <h2 className="text-xl font-semibold">Generate outreach</h2>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-white-600">
           Select offering, generate, and save output.
         </p>
       </div>

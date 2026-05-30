@@ -33,11 +33,11 @@ export function MessageHistory({
   onDeleteAction,
 }: Props) {
   return (
-    <div className="rounded-lg border border-gray-200 p-3">
+    <div className="rounded-lg border border-white-200 p-3">
       <h3 className="text-sm font-semibold">Message history</h3>
 
       {messages.length === 0 ? (
-        <p className="mt-2 text-sm text-gray-500">No messages yet.</p>
+        <p className="mt-2 text-sm text-white-500">No messages yet.</p>
       ) : (
         <div className="mt-3 space-y-3">
           {messages.map((message) => (

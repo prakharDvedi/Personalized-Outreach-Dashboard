@@ -33,14 +33,14 @@ export function MessageCard({
   onDeleteAction,
 }: Props) {
   return (
-    <article className="rounded-md border border-gray-100 p-3">
-      <p className="whitespace-pre-wrap text-sm text-gray-800">{message.content}</p>
+    <article className="rounded-md border border-white-100 p-3">
+      <p className="whitespace-pre-wrap text-sm text-white-800">{message.content}</p>
 
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
           onClick={() => onCopyAction(message.content)}
-          className="rounded-md border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50"
+          className="rounded-md border border-white-300 px-2 py-1 text-xs hover:bg-white-50"
         >
           Copy
         </button>
@@ -51,7 +51,7 @@ export function MessageCard({
             type="button"
             onClick={() => onRateAction(message.id, star)}
             className={`rounded-md px-2 py-1 text-xs ${
-              message.rating === star ? "bg-black text-white" : "border border-gray-300"
+              message.rating === star ? "bg-black text-white" : "border border-white-300"
             }`}
           >
             {star}
@@ -61,7 +61,7 @@ export function MessageCard({
         <button
           type="button"
           onClick={() => onToggleFavouriteAction(message.id, !message.isFavourite)}
-          className="rounded-md border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50"
+          className="rounded-md border border-white-300 px-2 py-1 text-xs hover:bg-white-50"
         >
           {message.isFavourite ? "Unfavourite" : "Favourite"}
         </button>
@@ -78,7 +78,7 @@ export function MessageCard({
       <div className="mt-3">
         <button
           type="button"
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-gray-50"
+          className="rounded-md border border-white-300 px-3 py-1.5 text-xs font-medium hover:bg-white-50"
           onClick={() => onOpenReplyAction(message.id, message.content)}
         >
           Prospect replied
