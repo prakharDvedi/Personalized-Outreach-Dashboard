@@ -10,6 +10,7 @@ import { addInput, getProspectById } from "@/actions/prospects";
 import { listMessagesByProspect, saveMessage } from "@/actions/messages";
 import { buildSystemPrompt, DEFAULT_SYSTEM_PROMPT } from "@/lib/prompts";
 import { extractFromScreenshot, extractFromUrl } from "@/lib/scraper";
+import { GeneratorPanel } from "@/components/prospects/generator-panel";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -62,9 +63,16 @@ export default async function ProspectDetailPage({ params }: PageProps) {
             ) : (
               <ul className="mt-2 space-y-2">
                 {prospect.inputs.map((input, idx) => (
-                  <li key={`${input.type}-${idx}`} className="rounded-md border border-gray-100 p-2 text-sm">
-                    <p className="font-medium">{input.type.replaceAll("_", " ")}</p>
-                    <p className="mt-1 text-xs text-gray-600">{input.rawValue}</p>
+                  <li
+                    key={`${input.type}-${idx}`}
+                    className="rounded-md border border-gray-100 p-2 text-sm"
+                  >
+                    <p className="font-medium">
+                      {input.type.replaceAll("_", " ")}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-600">
+                      {input.rawValue}
+                    </p>
                   </li>
                 ))}
               </ul>
@@ -81,7 +89,9 @@ export default async function ProspectDetailPage({ params }: PageProps) {
                 className="rounded-md border border-gray-300 px-3 py-2 text-sm"
                 defaultValue="url"
               >
-                <option value="linkedin_screenshot">LinkedIn screenshot (base64)</option>
+                <option value="linkedin_screenshot">
+                  LinkedIn screenshot (base64)
+                </option>
                 <option value="github_url">GitHub URL</option>
                 <option value="personal_website">Personal website</option>
                 <option value="company_website">Company website</option>
@@ -112,51 +122,22 @@ export default async function ProspectDetailPage({ params }: PageProps) {
           </div>
         </section>
 
-        <section className="space-y-4 rounded-xl border border-gray-200 p-4">
-          <div>
-            <h2 className="text-xl font-semibold">Generate outreach</h2>
-            <p className="mt-1 text-sm text-gray-600">
-              Select offering, generate, and save output.
-            </p>
-          </div>
-
-          <form action={generateAndSaveAction} className="grid gap-3">
-            <input type="hidden" name="prospectId" value={prospect.id} />
-            <label className="text-sm font-medium">Offering</label>
-            <select name="offeringId" required className="rounded-md border border-gray-300 px-3 py-2 text-sm">
-              <option value="">Select offering</option>
-              {offeringList.map((offering) => (
-                <option key={offering.id} value={offering.id}>
-                  {offering.name}
-                </option>
-              ))}
-            </select>
-            <button
-              type="submit"
-              className="w-fit rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-            >
-              Generate and save
-            </button>
-          </form>
-
-          <div className="rounded-lg border border-gray-200 p-3">
-            <h3 className="text-sm font-semibold">Message history</h3>
-            {messageHistory.length === 0 ? (
-              <p className="mt-2 text-sm text-gray-500">No messages yet.</p>
-            ) : (
-              <div className="mt-3 space-y-3">
-                {messageHistory.map((message) => (
-                  <article key={message.id} className="rounded-md border border-gray-100 p-3">
-                    <p className="whitespace-pre-wrap text-sm text-gray-800">{message.content}</p>
-                    <p className="mt-2 text-xs text-gray-500">
-                      Rating: {message.rating ?? "-"} • Favourite: {message.isFavourite ? "Yes" : "No"}
-                    </p>
-                  </article>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
+        <GeneratorPanel
+          prospectId={prospect.id}
+          extractedContext={prospect.extractedContext}
+          offerings={offeringList.map((o) => ({
+            id: o.id,
+            name: o.name,
+            content: o.content,
+          }))}
+          userPrompt={userPrompt?.content ?? null}
+          initialMessages={messageHistory.map((m) => ({
+            id: m.id,
+            content: m.content,
+            rating: m.rating,
+            isFavourite: m.isFavourite,
+          }))}
+        />
       </div>
     </main>
   );
@@ -226,23 +207,29 @@ async function generateAndSaveAction(formData: FormData) {
     where: (table, { eq: equals }) => equals(table.userId, userId),
   });
 
-  const system = buildSystemPrompt(userPrompt?.content ?? DEFAULT_SYSTEM_PROMPT, offering.content);
+  const system = buildSystemPrompt(
+    userPrompt?.content ?? DEFAULT_SYSTEM_PROMPT,
+    offering.content,
+  );
 
-  const response = await fetch(`${process.env.BETTER_AUTH_URL ?? "http://localhost:3000"}/api/generate`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+  const response = await fetch(
+    `${process.env.BETTER_AUTH_URL ?? "http://localhost:3000"}/api/generate`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        system,
+        messages: [
+          {
+            role: "user",
+            content: prospect.extractedContext || "No context provided yet.",
+          },
+        ],
+      }),
     },
-    body: JSON.stringify({
-      system,
-      messages: [
-        {
-          role: "user",
-          content: prospect.extractedContext || "No context provided yet.",
-        },
-      ],
-    }),
-  });
+  );
 
   if (!response.ok || !response.body) {
     return;

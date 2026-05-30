@@ -1,12 +1,13 @@
-// this is the offering detail page where users can edit their offering briefs and import content from URLs.
+// this is the offering detail page where users can edit their offering briefs and import content from URLs
+
 import { notFound } from "next/navigation";
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { offerings } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { extractFromUrl } from "@/lib/scraper";
-import { updateOffering } from "@/actions/offerings";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -103,32 +104,51 @@ async function importFromUrlAction(formData: FormData) {
   const userId = session?.user?.id;
   if (!userId) return;
 
-  const offering = await db.query.offerings.findFirst({
+  const existing = await db.query.offerings.findFirst({
     where: and(eq(offerings.id, id), eq(offerings.userId, userId)),
   });
 
-  if (!offering) return;
+  if (!existing) return;
 
   const extracted = await extractFromUrl(url);
 
-  await updateOffering(id, {
-    name: offering.name,
-    sourceUrl: url,
-    content: extracted || offering.content,
-  });
+  await db
+    .update(offerings)
+    .set({
+      sourceUrl: url,
+      content: extracted || existing.content,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(offerings.id, id), eq(offerings.userId, userId)));
+
+  revalidatePath("/offerings");
+  revalidatePath(`/offerings/${id}`);
 }
 
 async function saveOfferingAction(formData: FormData) {
   "use server";
 
   const id = String(formData.get("id") ?? "");
-  const name = String(formData.get("name") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
   const sourceUrlRaw = String(formData.get("sourceUrl") ?? "").trim();
-  const content = String(formData.get("content") ?? "");
+  const content = String(formData.get("content") ?? "").trim();
 
-  await updateOffering(id, {
-    name,
-    content,
-    sourceUrl: sourceUrlRaw || null,
-  });
+  if (!id || !name || !content) return;
+
+  const session = await auth.api.getSession({ headers: await headers() });
+  const userId = session?.user?.id;
+  if (!userId) return;
+
+  await db
+    .update(offerings)
+    .set({
+      name,
+      sourceUrl: sourceUrlRaw || null,
+      content,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(offerings.id, id), eq(offerings.userId, userId)));
+
+  revalidatePath("/offerings");
+  revalidatePath(`/offerings/${id}`);
 }
