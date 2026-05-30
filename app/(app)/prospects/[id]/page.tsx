@@ -10,6 +10,8 @@ import { getProspectById } from "@/actions/prospects";
 import { listMessagesByProspect } from "@/actions/messages";
 import { GeneratorPanel } from "@/components/prospects/generator-panel";
 import { AddInputForm } from "@/components/prospects/add-input-form";
+import { ProspectInputsPanel } from "@/components/prospects/prospect-inputs-panel";
+import { ProspectContextPanel } from "@/components/prospects/prospect-context-panel";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -47,40 +49,14 @@ export default async function ProspectDetailPage({ params }: PageProps) {
             </p>
           </div>
 
-          <div className="rounded-lg border border-white-200 p-3">
-            <h2 className="text-sm font-semibold">Current inputs</h2>
-            {prospect.inputs.length === 0 ? (
-              <p className="mt-2 text-sm text-white-500">No inputs yet.</p>
-            ) : (
-              <ul className="mt-2 space-y-2">
-                {prospect.inputs.map((input, idx) => (
-                  <li
-                    key={`${input.type}-${idx}`}
-                    className="rounded-md border border-white-100 p-2 text-sm"
-                  >
-                    <p className="font-medium">
-                      {input.type.replaceAll("_", " ")}
-                    </p>
-                    <p className="mt-1 text-xs text-white/80">
-                      {input.rawValue}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          <ProspectInputsPanel inputs={prospect.inputs} />
 
           <div className="rounded-lg border border-white-200 p-3">
             <h2 className="text-sm font-semibold">Add input</h2>
             <AddInputForm prospectId={prospect.id} />
           </div>
 
-          <div className="rounded-lg border border-white-200 p-3">
-            <h2 className="text-sm font-semibold">Compiled context</h2>
-            <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap text-xs text-white/80">
-              {prospect.extractedContext || "No context yet."}
-            </pre>
-          </div>
+          <ProspectContextPanel context={prospect.extractedContext} />
         </section>
 
         <GeneratorPanel

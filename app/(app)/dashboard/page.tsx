@@ -6,6 +6,8 @@ import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { conversations, messages, offerings, prospects } from "@/db/schema";
 import { MessagesChart } from "@/components/dashboard/message-chart";
+import { StatCard } from "@/components/dashboard/stat-card";
+import { TopOfferingsCard } from "@/components/dashboard/top-offerings-card";
 
 type DailyPoint = {
   day: string;
@@ -85,45 +87,14 @@ export default async function DashboardPage() {
       </p>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          label="Messages generated"
-          value={messageCountRow?.value ?? 0}
-        />
-        <StatCard
-          label="Prospects saved"
-          value={prospectCountRow?.value ?? 0}
-        />
-        <StatCard
-          label="Offerings created"
-          value={offeringCountRow?.value ?? 0}
-        />
-        <StatCard
-          label="Conversations with replies"
-          value={conversationCountRow?.value ?? 0}
-        />
+        <StatCard label="Messages generated" value={messageCountRow?.value ?? 0} />
+        <StatCard label="Prospects saved" value={prospectCountRow?.value ?? 0} />
+        <StatCard label="Offerings created" value={offeringCountRow?.value ?? 0} />
+        <StatCard label="Conversations with replies" value={conversationCountRow?.value ?? 0} />
       </section>
 
       <section className="mt-6 grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-white-200 p-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-white/80">
-            Top offerings by usage
-          </h2>
-          {topOfferings.length === 0 ? (
-            <p className="mt-3 text-sm text-white/80">No message usage yet.</p>
-          ) : (
-            <ul className="mt-3 space-y-2">
-              {topOfferings.map((item) => (
-                <li
-                  key={item.offeringId}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <span className="text-white-800">{item.offeringName}</span>
-                  <span className="font-medium">{item.usage}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <TopOfferingsCard topOfferings={topOfferings} />
 
         <div className="rounded-xl border border-white-200 p-4">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-white/80">
@@ -133,17 +104,6 @@ export default async function DashboardPage() {
         </div>
       </section>
     </main>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-xl border border-white-200 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-white/80">
-        {label}
-      </p>
-      <p className="mt-2 text-2xl font-semibold">{value}</p>
-    </div>
   );
 }
 

@@ -4,6 +4,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AuthCard } from "@/components/auth/auth-card";
 
 type SignupResponse = {
   error?: {
@@ -50,13 +51,14 @@ export default function SignupPage() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md items-center px-6 py-10">
-      <form onSubmit={handleSubmit} className="w-full space-y-4 rounded-xl border border-white-200 p-6 shadow-sm">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">Create account</h1>
-          <p className="text-sm text-white/80">Set up your Kakiyo Outreach workspace.</p>
-        </div>
-
+    <AuthCard
+      title="Create account"
+      description="Set up your Kakiyo Outreach workspace."
+      footerText="Already have an account?"
+      footerHref="/login"
+      footerLabel="Log in"
+    >
+      <form onSubmit={handleSubmit} className="grid gap-4">
         <label className="block space-y-1">
           <span className="text-sm font-medium">Name</span>
           <input
@@ -103,14 +105,7 @@ export default function SignupPage() {
         >
           {isSubmitting ? "Creating..." : "Create account"}
         </button>
-
-        <p className="text-sm text-white/80">
-          Already have an account?{" "}
-          <a href="/login" className="font-medium text-black underline">
-            Log in
-          </a>
-        </p>
       </form>
-    </main>
+    </AuthCard>
   );
-}   
+}

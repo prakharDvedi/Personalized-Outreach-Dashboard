@@ -8,6 +8,8 @@ import { db } from "@/db";
 import { offerings } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { extractFromUrl } from "@/lib/scraper";
+import { OfferingImportForm } from "@/components/offerings/offering-import-form";
+import { OfferingEditForm } from "@/components/offerings/offering-edit-form";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -37,58 +39,19 @@ export default async function OfferingDetailPage({ params }: PageProps) {
         Import source material, then edit it into your final offering brief.
       </p>
 
-      <section className="mt-6 rounded-xl border border-white-200 p-4">
-        <form action={importFromUrlAction} className="flex gap-2">
-          <input type="hidden" name="id" value={offering.id} />
-          <input
-            name="url"
-            type="url"
-            required
-            defaultValue={offering.sourceUrl ?? ""}
-            placeholder="https://your-site.com/offering-page"
-            className="w-full rounded-md border border-white-300 px-3 py-2 text-sm outline-none ring-offset-2 focus:border-white-500 focus:ring-2"
-          />
-          <button
-            type="submit"
-            className="rounded-md border border-white-300 px-3 py-2 text-sm hover:bg-white-50"
-          >
-            Import from URL
-          </button>
-        </form>
-      </section>
+      <OfferingImportForm
+        action={importFromUrlAction}
+        offeringId={offering.id}
+        defaultValue={offering.sourceUrl}
+      />
 
-      <section className="mt-4 rounded-xl border border-white-200 p-4">
-        <form action={saveOfferingAction} className="grid gap-3">
-          <input type="hidden" name="id" value={offering.id} />
-          <input
-            name="name"
-            required
-            defaultValue={offering.name}
-            placeholder="Offering name"
-            className="rounded-md border border-white-300 px-3 py-2 text-sm outline-none ring-offset-2 focus:border-white-500 focus:ring-2"
-          />
-          <input
-            name="sourceUrl"
-            defaultValue={offering.sourceUrl ?? ""}
-            placeholder="Source URL (optional)"
-            className="rounded-md border border-white-300 px-3 py-2 text-sm outline-none ring-offset-2 focus:border-white-500 focus:ring-2"
-          />
-          <textarea
-            name="content"
-            required
-            rows={14}
-            defaultValue={offering.content}
-            placeholder="Main offering content"
-            className="rounded-md border border-white-300 px-3 py-2 text-sm outline-none ring-offset-2 focus:border-white-500 focus:ring-2"
-          />
-          <button
-            type="submit"
-            className="w-fit rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-white-800"
-          >
-            Save
-          </button>
-        </form>
-      </section>
+      <OfferingEditForm
+        action={saveOfferingAction}
+        offeringId={offering.id}
+        name={offering.name}
+        sourceUrl={offering.sourceUrl}
+        content={offering.content}
+      />
     </main>
   );
 }
