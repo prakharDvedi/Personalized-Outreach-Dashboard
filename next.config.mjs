@@ -7,9 +7,6 @@ const __dirname = path.dirname(__filename);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    dynamicIO: true,
-  },
   output: "standalone",
   turbopack: {
     root: __dirname,
