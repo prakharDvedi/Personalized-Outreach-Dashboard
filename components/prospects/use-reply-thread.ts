@@ -1,8 +1,3 @@
-// this hook manages the state and logic for the reply thread UI in the prospect detail page. 
-// It handles opening the reply composer, generating follow-up messages using the AI, 
-// and maintaining the conversation thread state for each message. 
-// It also manages loading and error states for the reply generation process.
-
 "use client";
 
 import { useState } from "react";
@@ -19,12 +14,10 @@ export function useReplyThread({ selectedOffering, userPrompt }: Params) {
   const [openReplyFor, setOpenReplyFor] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState("");
   const [replyLoadingFor, setReplyLoadingFor] = useState<string | null>(null);
-  const [threadByMessage, setThreadByMessage] = useState<
-    Record<string, ConversationTurn[]>
-  >({});
+  const [threadByMessage, setThreadByMessage] = useState<Record<string, ConversationTurn[]>>({});
   const [replyError, setReplyError] = useState("");
 
-  const openReplyComposer = async (messageId: string, originalMessage: string) => {
+  const openReplyComposer = async (messageId: string) => {
     setReplyError("");
     setOpenReplyFor(messageId);
     setReplyDraft("");
@@ -34,21 +27,7 @@ export function useReplyThread({ selectedOffering, userPrompt }: Params) {
     }
 
     const existing = await getThread(messageId);
-    if (existing.length > 0) {
-      setThreadByMessage((prev) => ({ ...prev, [messageId]: existing }));
-      return;
-    }
-
-    setThreadByMessage((prev) => ({
-      ...prev,
-      [messageId]: [
-        {
-          role: "assistant",
-          content: originalMessage,
-          timestamp: new Date().toISOString(),
-        },
-      ],
-    }));
+    setThreadByMessage((prev) => ({ ...prev, [messageId]: existing }));
   };
 
   const generateFollowUp = async (messageId: string, originalMessage: string) => {
@@ -66,13 +45,11 @@ export function useReplyThread({ selectedOffering, userPrompt }: Params) {
     setReplyError("");
 
     try {
-      const baseThread = threadByMessage[messageId] ?? [
-        {
-          role: "assistant" as const,
-          content: originalMessage,
-          timestamp: new Date().toISOString(),
-        },
-      ];
+      const existingThread = threadByMessage[messageId] ?? [];
+      const baseThread =
+        existingThread.length > 0
+          ? existingThread
+          : [{ role: "assistant" as const, content: originalMessage, timestamp: "" }];
 
       const prospectReply = replyDraft.trim();
       const system = buildSystemPrompt(
@@ -87,10 +64,7 @@ export function useReplyThread({ selectedOffering, userPrompt }: Params) {
           model: process.env.NEXT_PUBLIC_AI_MODEL || undefined,
           system,
           messages: [
-            ...baseThread.map((turn) => ({
-              role: turn.role,
-              content: turn.content,
-            })),
+            ...baseThread.map((turn) => ({ role: turn.role, content: turn.content })),
             {
               role: "user",
               content: `The prospect replied: ${prospectReply}\nGenerate a contextual follow-up that continues naturally.`,
@@ -122,28 +96,11 @@ export function useReplyThread({ selectedOffering, userPrompt }: Params) {
       await addReply({ messageId, role: "user", content: prospectReply });
       await addReply({ messageId, role: "assistant", content: followUp });
 
-      setThreadByMessage((prev) => ({
-        ...prev,
-        [messageId]: [
-          ...baseThread,
-          {
-            role: "user",
-            content: prospectReply,
-            timestamp: new Date().toISOString(),
-          },
-          {
-            role: "assistant",
-            content: followUp,
-            timestamp: new Date().toISOString(),
-          },
-        ],
-      }));
-
+      const canonicalThread = await getThread(messageId);
+      setThreadByMessage((prev) => ({ ...prev, [messageId]: canonicalThread }));
       setReplyDraft("");
     } catch (err: unknown) {
-      setReplyError(
-        err instanceof Error ? err.message : "Follow-up generation failed",
-      );
+      setReplyError(err instanceof Error ? err.message : "Follow-up generation failed");
     } finally {
       setReplyLoadingFor(null);
     }

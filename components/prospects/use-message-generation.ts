@@ -1,5 +1,4 @@
-// this hook manages the state and logic for generating AI messages based on the selected offering and prospect context. 
-
+/// this hook manages the state and logic for generating AI messages based on the selected offering and prospect context. 
 "use client";
 
 import { useMemo, useState } from "react";
@@ -117,6 +116,7 @@ export function useMessageGeneration({
     streamedText,
     error,
     messages,
+    setMessages,
     generate,
   };
 }

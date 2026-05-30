@@ -1,13 +1,9 @@
-// this is the main generator panel component that is used in the prospect detail page. 
-//It allows users to select an offering, generate an outreach message using the AI, 
-// and view the message history with the ability to reply and generate follow-ups. 
-// It uses the useMessageGeneration and useReplyThread hooks to manage the state and logic for these features.
-// components/prospects/generator-panel.tsx
 "use client";
 
 import { GenerationControls } from "./generation-controls";
 import { LiveOutput } from "./live-output";
 import { MessageHistory } from "./message-history";
+import { useMessageActions } from "./use-message-actions";
 import { useMessageGeneration } from "./use-message-generation";
 import { useReplyThread } from "./use-reply-thread";
 import type { GeneratorPanelProps } from "./types";
@@ -32,11 +28,13 @@ export function GeneratorPanel({
     userPrompt,
   });
 
+  const messageActions = useMessageActions(generation.messages, generation.setMessages);
+
   return (
-    <section className="space-y-4 rounded-xl border border-white-200 p-4">
+    <section className="space-y-4 rounded-xl border border-gray-200 p-4">
       <div>
         <h2 className="text-xl font-semibold">Generate outreach</h2>
-        <p className="mt-1 text-sm text-white/80">
+        <p className="mt-1 text-sm text-gray-600">
           Select offering, generate, and save output.
         </p>
       </div>
@@ -49,12 +47,10 @@ export function GeneratorPanel({
         onGenerateAction={generation.generate}
       />
 
-      {generation.error ? (
-        <p className="text-sm text-red-600">{generation.error}</p>
-      ) : null}
-
-      {replies.replyError ? (
-        <p className="text-sm text-red-600">{replies.replyError}</p>
+      {generation.error ? <p className="text-sm text-red-600">{generation.error}</p> : null}
+      {replies.replyError ? <p className="text-sm text-red-600">{replies.replyError}</p> : null}
+      {messageActions.actionError ? (
+        <p className="text-sm text-red-600">{messageActions.actionError}</p>
       ) : null}
 
       <LiveOutput text={generation.streamedText} />
@@ -68,6 +64,10 @@ export function GeneratorPanel({
         onOpenReplyAction={replies.openReplyComposer}
         onReplyDraftChangeAction={replies.setReplyDraft}
         onGenerateFollowUpAction={replies.generateFollowUp}
+        onCopyAction={messageActions.copyMessageAction}
+        onRateAction={messageActions.rateMessageAction}
+        onToggleFavouriteAction={messageActions.toggleFavouriteAction}
+        onDeleteAction={messageActions.deleteMessageAction}
       />
     </section>
   );
