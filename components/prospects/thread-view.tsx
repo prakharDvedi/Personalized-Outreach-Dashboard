@@ -16,18 +16,18 @@ export function ThreadView({ messageId, turns }: Props) {
 
   return (
     <div className="space-y-2 pt-2">
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-600">
+      <p className="text-xs font-semibold uppercase tracking-wide text-white/80">
         Thread
       </p>
       {turns.map((turn, index) => (
         <div
           key={`${messageId}-${index}-${turn.timestamp}`}
-          className="rounded-md border border-gray-100 p-2"
+          className="rounded-md border border-white-100 p-2"
         >
-          <p className="text-[11px] font-semibold uppercase text-gray-500">
+          <p className="text-[11px] font-semibold uppercase text-white-500">
             {turn.role === "assistant" ? "You" : "Prospect"}
           </p>
-          <p className="mt-1 whitespace-pre-wrap text-sm text-gray-800">
+          <p className="mt-1 whitespace-pre-wrap text-sm text-white-800">
             {turn.content}
           </p>
         </div>

@@ -27,16 +27,16 @@ export function MessageCard({
   onGenerateFollowUpAction,
 }: Props) {
   return (
-    <article className="rounded-md border border-gray-100 p-3">
-      <p className="whitespace-pre-wrap text-sm text-gray-800">{message.content}</p>
-      <p className="mt-2 text-xs text-gray-500">
+    <article className="rounded-md border border-white-100 p-3">
+      <p className="whitespace-pre-wrap text-sm text-white-800">{message.content}</p>
+      <p className="mt-2 text-xs text-white-500">
         Rating: {message.rating ?? "-"} | Favourite: {message.isFavourite ? "Yes" : "No"}
       </p>
 
       <div className="mt-3">
         <button
           type="button"
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-gray-50"
+          className="rounded-md border border-white-300 px-3 py-1.5 text-xs font-medium hover:bg-white-50"
           onClick={() => onOpenReplyAction(message.id, message.content)}
         >
           Prospect replied

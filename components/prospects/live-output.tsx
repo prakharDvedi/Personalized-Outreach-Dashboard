@@ -11,9 +11,9 @@ export function LiveOutput({ text }: Props) {
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 p-3">
+    <div className="rounded-lg border border-white-200 p-3">
       <h3 className="text-sm font-semibold">Live output</h3>
-      <p className="mt-2 whitespace-pre-wrap text-sm text-gray-800">{text}</p>
+      <p className="mt-2 whitespace-pre-wrap text-sm text-white-800">{text}</p>
     </div>
   );
 }

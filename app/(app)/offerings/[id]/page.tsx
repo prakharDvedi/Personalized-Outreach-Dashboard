@@ -33,11 +33,11 @@ export default async function OfferingDetailPage({ params }: PageProps) {
   return (
     <main className="mx-auto w-full max-w-4xl px-6 py-8">
       <h1 className="text-2xl font-semibold">Edit offering</h1>
-      <p className="mt-1 text-sm text-gray-600">
+      <p className="mt-1 text-sm text-white/80">
         Import source material, then edit it into your final offering brief.
       </p>
 
-      <section className="mt-6 rounded-xl border border-gray-200 p-4">
+      <section className="mt-6 rounded-xl border border-white-200 p-4">
         <form action={importFromUrlAction} className="flex gap-2">
           <input type="hidden" name="id" value={offering.id} />
           <input
@@ -46,18 +46,18 @@ export default async function OfferingDetailPage({ params }: PageProps) {
             required
             defaultValue={offering.sourceUrl ?? ""}
             placeholder="https://your-site.com/offering-page"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none ring-offset-2 focus:border-gray-500 focus:ring-2"
+            className="w-full rounded-md border border-white-300 px-3 py-2 text-sm outline-none ring-offset-2 focus:border-white-500 focus:ring-2"
           />
           <button
             type="submit"
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm hover:bg-gray-50"
+            className="rounded-md border border-white-300 px-3 py-2 text-sm hover:bg-white-50"
           >
             Import from URL
           </button>
         </form>
       </section>
 
-      <section className="mt-4 rounded-xl border border-gray-200 p-4">
+      <section className="mt-4 rounded-xl border border-white-200 p-4">
         <form action={saveOfferingAction} className="grid gap-3">
           <input type="hidden" name="id" value={offering.id} />
           <input
@@ -65,13 +65,13 @@ export default async function OfferingDetailPage({ params }: PageProps) {
             required
             defaultValue={offering.name}
             placeholder="Offering name"
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm outline-none ring-offset-2 focus:border-gray-500 focus:ring-2"
+            className="rounded-md border border-white-300 px-3 py-2 text-sm outline-none ring-offset-2 focus:border-white-500 focus:ring-2"
           />
           <input
             name="sourceUrl"
             defaultValue={offering.sourceUrl ?? ""}
             placeholder="Source URL (optional)"
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm outline-none ring-offset-2 focus:border-gray-500 focus:ring-2"
+            className="rounded-md border border-white-300 px-3 py-2 text-sm outline-none ring-offset-2 focus:border-white-500 focus:ring-2"
           />
           <textarea
             name="content"
@@ -79,11 +79,11 @@ export default async function OfferingDetailPage({ params }: PageProps) {
             rows={14}
             defaultValue={offering.content}
             placeholder="Main offering content"
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm outline-none ring-offset-2 focus:border-gray-500 focus:ring-2"
+            className="rounded-md border border-white-300 px-3 py-2 text-sm outline-none ring-offset-2 focus:border-white-500 focus:ring-2"
           />
           <button
             type="submit"
-            className="w-fit rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
+            className="w-fit rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-white-800"
           >
             Save
           </button>

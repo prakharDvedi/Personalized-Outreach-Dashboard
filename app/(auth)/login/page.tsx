@@ -50,10 +50,10 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md items-center px-6 py-10">
-      <form onSubmit={handleSubmit} className="w-full space-y-4 rounded-xl border border-gray-200 p-6 shadow-sm">
+      <form onSubmit={handleSubmit} className="w-full space-y-4 rounded-xl border border-white-200 p-6 shadow-sm">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold">Log in</h1>
-          <p className="text-sm text-gray-600">Sign in to continue to Kakiyo Outreach.</p>
+          <p className="text-sm text-white/80">Sign in to continue to Kakiyo Outreach.</p>
         </div>
 
         <label className="block space-y-1">
@@ -64,7 +64,7 @@ export default function LoginPage() {
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none ring-offset-2 focus:border-gray-500 focus:ring-2"
+            className="w-full rounded-md border border-white-300 px-3 py-2 text-sm outline-none ring-offset-2 focus:border-white-500 focus:ring-2"
           />
         </label>
 
@@ -76,7 +76,7 @@ export default function LoginPage() {
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none ring-offset-2 focus:border-gray-500 focus:ring-2"
+            className="w-full rounded-md border border-white-300 px-3 py-2 text-sm outline-none ring-offset-2 focus:border-white-500 focus:ring-2"
           />
         </label>
 
@@ -85,7 +85,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full rounded-md bg-black px-3 py-2 text-sm font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-md bg-black px-3 py-2 text-sm font-medium text-white transition hover:bg-white-800 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting ? "Signing in..." : "Sign in"}
         </button>

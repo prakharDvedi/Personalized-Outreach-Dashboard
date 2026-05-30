@@ -24,7 +24,7 @@ export function GenerationControls({
       <select
         value={selectedOfferingId}
         onChange={(event) => onOfferingChangeAction(event.target.value)}
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="w-full rounded-md border border-white-300 px-3 py-2 text-sm"
       >
         <option value="">Select offering</option>
         {offerings.map((offering) => (
@@ -38,7 +38,7 @@ export function GenerationControls({
         type="button"
         disabled={isGenerating}
         onClick={onGenerateAction}
-        className="w-fit rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+        className="w-fit rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-white-800 disabled:opacity-50"
       >
         {isGenerating ? "Generating..." : "Generate message"}
       </button>

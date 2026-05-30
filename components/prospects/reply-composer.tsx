@@ -32,8 +32,8 @@ export function ReplyComposer({
   }
 
   return (
-    <div className="mt-3 space-y-2 rounded-md border border-gray-200 p-3">
-      <label className="text-xs font-semibold uppercase tracking-wide text-gray-600">
+    <div className="mt-3 space-y-2 rounded-md border border-white-200 p-3">
+      <label className="text-xs font-semibold uppercase tracking-wide text-white/80">
         Prospect reply
       </label>
       <textarea
@@ -41,7 +41,7 @@ export function ReplyComposer({
         value={draft}
         onChange={(event) => onDraftChangeAction(event.target.value)}
         placeholder="Paste the prospect's reply..."
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="w-full rounded-md border border-white-300 px-3 py-2 text-sm"
       />
       <button
         type="button"

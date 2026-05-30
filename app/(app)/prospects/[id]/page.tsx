@@ -48,29 +48,29 @@ export default async function ProspectDetailPage({ params }: PageProps) {
   return (
     <main className="mx-auto w-full max-w-7xl px-6 py-8">
       <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-        <section className="space-y-4 rounded-xl border border-gray-200 p-4">
+        <section className="space-y-4 rounded-xl border border-white-200 p-4">
           <div>
             <h1 className="text-2xl font-semibold">{prospect.name}</h1>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-white/80">
               Add inputs to build prospect context.
             </p>
           </div>
 
-          <div className="rounded-lg border border-gray-200 p-3">
+          <div className="rounded-lg border border-white-200 p-3">
             <h2 className="text-sm font-semibold">Current inputs</h2>
             {prospect.inputs.length === 0 ? (
-              <p className="mt-2 text-sm text-gray-500">No inputs yet.</p>
+              <p className="mt-2 text-sm text-white-500">No inputs yet.</p>
             ) : (
               <ul className="mt-2 space-y-2">
                 {prospect.inputs.map((input, idx) => (
                   <li
                     key={`${input.type}-${idx}`}
-                    className="rounded-md border border-gray-100 p-2 text-sm"
+                    className="rounded-md border border-white-100 p-2 text-sm"
                   >
                     <p className="font-medium">
                       {input.type.replaceAll("_", " ")}
                     </p>
-                    <p className="mt-1 text-xs text-gray-600">
+                    <p className="mt-1 text-xs text-white/80">
                       {input.rawValue}
                     </p>
                   </li>
@@ -79,14 +79,14 @@ export default async function ProspectDetailPage({ params }: PageProps) {
             )}
           </div>
 
-          <div className="rounded-lg border border-gray-200 p-3">
+          <div className="rounded-lg border border-white-200 p-3">
             <h2 className="text-sm font-semibold">Add input</h2>
             <form action={addInputAction} className="mt-3 grid gap-2">
               <input type="hidden" name="prospectId" value={prospect.id} />
               <select
                 name="type"
                 required
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className="rounded-md border border-white-300 px-3 py-2 text-sm"
                 defaultValue="url"
               >
                 <option value="linkedin_screenshot">
@@ -103,20 +103,20 @@ export default async function ProspectDetailPage({ params }: PageProps) {
                 required
                 rows={5}
                 placeholder="URL, free text, or base64 image string for screenshot input"
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className="rounded-md border border-white-300 px-3 py-2 text-sm"
               />
               <button
                 type="submit"
-                className="w-fit rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+                className="w-fit rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-white-800"
               >
                 Add input
               </button>
             </form>
           </div>
 
-          <div className="rounded-lg border border-gray-200 p-3">
+          <div className="rounded-lg border border-white-200 p-3">
             <h2 className="text-sm font-semibold">Compiled context</h2>
-            <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap text-xs text-gray-700">
+            <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap text-xs text-white/80">
               {prospect.extractedContext || "No context yet."}
             </pre>
           </div>
