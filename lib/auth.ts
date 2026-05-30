@@ -12,13 +12,22 @@ function getRequiredEnv(name: string) {
   return value;
 }
 
-const baseURL = getRequiredEnv("BETTER_AUTH_URL");
+const fallbackBaseURL = getRequiredEnv("BETTER_AUTH_URL");
 const secret = getRequiredEnv("BETTER_AUTH_SECRET");
 
 export const auth = betterAuth({
   secret,
-  baseURL,
-  trustedOrigins: [baseURL],
+  baseURL: {
+    allowedHosts: ["localhost:3000", "127.0.0.1:3000", "*.vercel.app"],
+    fallback: fallbackBaseURL,
+    protocol: process.env.NODE_ENV === "development" ? "http" : "https",
+  },
+  onAPIError: {
+    throw: true,
+    onError: (error) => {
+      console.error("[better-auth]", error);
+    },
+  },
   plugins: [nextCookies()],
   database: drizzleAdapter(db, {
     provider: "pg",
