@@ -5,12 +5,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthCard } from "@/components/auth/auth-card";
-
-type SignupResponse = {
-  error?: {
-    message?: string;
-  };
-};
+import { readErrorMessage } from "@/lib/parse-response";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -34,10 +29,8 @@ export default function SignupPage() {
         body: JSON.stringify({ name, email, password }),
       });
 
-      const data = (await response.json()) as SignupResponse;
-
       if (!response.ok) {
-        setErrorMessage(data.error?.message ?? "Unable to create account.");
+        setErrorMessage(await readErrorMessage(response, "Unable to create account."));
         return;
       }
 

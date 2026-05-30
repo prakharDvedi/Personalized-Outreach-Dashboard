@@ -5,12 +5,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthCard } from "@/components/auth/auth-card";
-
-type LoginResponse = {
-  error?: {
-    message?: string;
-  };
-};
+import { readErrorMessage } from "@/lib/parse-response";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,10 +28,8 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = (await response.json()) as LoginResponse;
-
       if (!response.ok) {
-        setErrorMessage(data.error?.message ?? "Unable to sign in.");
+        setErrorMessage(await readErrorMessage(response, "Unable to sign in."));
         return;
       }
 

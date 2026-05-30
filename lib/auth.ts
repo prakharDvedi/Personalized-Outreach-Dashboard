@@ -16,14 +16,30 @@ function getRequiredEnv(name: string) {
   return value;
 }
 
+function getAllowedHosts() {
+  const allowedHosts = new Set<string>(["localhost:3000", "127.0.0.1:3000", "*.vercel.app"]);
+  const configuredBaseUrl = process.env.BETTER_AUTH_URL;
+
+  if (configuredBaseUrl) {
+    try {
+      allowedHosts.add(new URL(configuredBaseUrl).host);
+    } catch {
+      // ignore invalid custom URLs and keep the safe defaults
+    }
+  }
+
+  return [...allowedHosts];
+}
+
 function createAuthClient(): AuthClient {
-  const baseURL = getRequiredEnv("BETTER_AUTH_URL");
   const secret = getRequiredEnv("BETTER_AUTH_SECRET");
 
   return betterAuth({
     secret,
-    baseURL,
-    trustedOrigins: [baseURL],
+    baseURL: {
+      allowedHosts: getAllowedHosts(),
+      protocol: process.env.NODE_ENV === "development" ? "http" : "https",
+    },
     plugins: [nextCookies()],
     database: drizzleAdapter(db, {
       provider: "pg",
