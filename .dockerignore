@@ -1,0 +1,13 @@
+.git
+.next
+node_modules
+drizzle
+coverage
+*.log
+.env
+README.md
+plan.md
+task.md
+structure.md
+AGENTS.md
+CLAUDE.md

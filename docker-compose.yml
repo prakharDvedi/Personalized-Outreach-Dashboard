@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: kakiyo-postgres
+    environment:
+      POSTGRES_DB: outreach
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d outreach"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kakiyo-app
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/outreach
+      BETTER_AUTH_URL: http://localhost:3000
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    command: sh -c "./node_modules/.bin/drizzle-kit migrate && node server.js"
+
+volumes:
+  postgres_data:
