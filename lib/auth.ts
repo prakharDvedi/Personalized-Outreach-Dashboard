@@ -31,7 +31,7 @@ export const auth = betterAuth({
   plugins: [nextCookies()],
   database: drizzleAdapter(db, {
     provider: "pg",
-    schema,
+    schema: { ...schema, user: schema.appUsers },
     usePlural: true,
   }),
   emailAndPassword: {

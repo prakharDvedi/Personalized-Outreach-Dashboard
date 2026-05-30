@@ -28,7 +28,7 @@ export type ConversationTurn = {
   timestamp: string;
 };
 
-export const users = pgTable("users", {
+export const appUsers = pgTable("app_users", {
   id: text("id").primaryKey(),
   email: text("email").notNull().unique(),
   name: text("name"),
@@ -48,7 +48,7 @@ export const accounts = pgTable("accounts", {
   providerId: text("provider_id").notNull(),
   userId: text("user_id")
     .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => appUsers.id, { onDelete: "cascade" }),
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
   idToken: text("id_token"),
@@ -82,7 +82,7 @@ export const sessions = pgTable("sessions", {
   userAgent: text("user_agent"),
   userId: text("user_id")
     .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => appUsers.id, { onDelete: "cascade" }),
   impersonatedBy: text("impersonated_by"),
 });
 
@@ -103,7 +103,7 @@ export const offerings = pgTable("offerings", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: text("user_id")
     .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => appUsers.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   content: text("content").notNull(),
   sourceUrl: text("source_url"),
@@ -121,7 +121,7 @@ export const userPrompts = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     userId: text("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => appUsers.id, { onDelete: "cascade" }),
     content: text("content").notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
@@ -138,7 +138,7 @@ export const prospects = pgTable("prospects", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: text("user_id")
     .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => appUsers.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   extractedContext: text("extracted_context").notNull().default(""),
   inputs: jsonb("inputs").$type<ProspectInput[]>().notNull().default([]),
@@ -151,7 +151,7 @@ export const messages = pgTable("messages", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: text("user_id")
     .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => appUsers.id, { onDelete: "cascade" }),
   prospectId: uuid("prospect_id")
     .notNull()
     .references(() => prospects.id, { onDelete: "cascade" }),
@@ -185,7 +185,7 @@ export const conversations = pgTable(
   }),
 );
 
-export const usersRelations = relations(users, ({ many, one }) => ({
+export const appUsersRelations = relations(appUsers, ({ many, one }) => ({
   accounts: many(accounts),
   sessions: many(sessions),
   offerings: many(offerings),
@@ -195,46 +195,46 @@ export const usersRelations = relations(users, ({ many, one }) => ({
 }));
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
-  user: one(users, {
+  user: one(appUsers, {
     fields: [accounts.userId],
-    references: [users.id],
+    references: [appUsers.id],
   }),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
-  user: one(users, {
+  user: one(appUsers, {
     fields: [sessions.userId],
-    references: [users.id],
+    references: [appUsers.id],
   }),
 }));
 
 export const offeringsRelations = relations(offerings, ({ one, many }) => ({
-  user: one(users, {
+  user: one(appUsers, {
     fields: [offerings.userId],
-    references: [users.id],
+    references: [appUsers.id],
   }),
   messages: many(messages),
 }));
 
 export const userPromptsRelations = relations(userPrompts, ({ one }) => ({
-  user: one(users, {
+  user: one(appUsers, {
     fields: [userPrompts.userId],
-    references: [users.id],
+    references: [appUsers.id],
   }),
 }));
 
 export const prospectsRelations = relations(prospects, ({ one, many }) => ({
-  user: one(users, {
+  user: one(appUsers, {
     fields: [prospects.userId],
-    references: [users.id],
+    references: [appUsers.id],
   }),
   messages: many(messages),
 }));
 
 export const messagesRelations = relations(messages, ({ one }) => ({
-  user: one(users, {
+  user: one(appUsers, {
     fields: [messages.userId],
-    references: [users.id],
+    references: [appUsers.id],
   }),
   prospect: one(prospects, {
     fields: [messages.prospectId],
@@ -253,3 +253,5 @@ export const conversationsRelations = relations(conversations, ({ one }) => ({
     references: [messages.id],
   }),
 }));
+
+

@@ -15,6 +15,13 @@
       "when": 1780126685183,
       "tag": "0001_magical_zarek",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780169530176,
+      "tag": "0002_shiny_tyrannus",
+      "breakpoints": true
     }
   ]
 }
