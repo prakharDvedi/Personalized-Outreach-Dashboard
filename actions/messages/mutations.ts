@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { messages } from "@/db/schema";
+import { logger } from "@/lib/logger";
 import { requireUserId } from "./auth";
 import type {
   RateMessageInput,
@@ -13,6 +14,10 @@ import type {
 
 export async function saveMessage(input: SaveMessageInput) {
   const userId = await requireUserId();
+  logger.info("actions/messages", "save start", {
+    prospectId: input.prospectId,
+    offeringId: input.offeringId,
+  });
 
   const [created] = await db
     .insert(messages)
@@ -26,6 +31,10 @@ export async function saveMessage(input: SaveMessageInput) {
 
   revalidatePath(`/prospects/${input.prospectId}`);
   revalidatePath("/dashboard");
+  logger.info("actions/messages", "save success", {
+    messageId: created.id,
+    prospectId: input.prospectId,
+  });
   return created;
 }
 
@@ -46,6 +55,10 @@ export async function rateMessage(input: RateMessageInput) {
 
   revalidatePath(`/prospects/${updated.prospectId}`);
   revalidatePath("/dashboard");
+  logger.info("actions/messages", "rate success", {
+    messageId: updated.id,
+    rating: input.rating ?? "null",
+  });
   return updated;
 }
 
@@ -62,6 +75,10 @@ export async function toggleFavourite(input: ToggleFavouriteInput) {
 
   revalidatePath(`/prospects/${updated.prospectId}`);
   revalidatePath("/dashboard");
+  logger.info("actions/messages", "favourite toggled", {
+    messageId: updated.id,
+    isFavourite: updated.isFavourite,
+  });
   return updated;
 }
 
@@ -77,5 +94,9 @@ export async function deleteMessage(messageId: string) {
 
   revalidatePath(`/prospects/${deleted.prospectId}`);
   revalidatePath("/dashboard");
+  logger.info("actions/messages", "delete success", {
+    messageId: deleted.id,
+    prospectId: deleted.prospectId,
+  });
   return deleted.id;
 }

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { conversations, type ConversationTurn } from "@/db/schema";
+import { logger } from "@/lib/logger";
 import { requireUserId } from "./auth";
 import type { AddReplyInput } from "./types";
 
@@ -19,6 +20,10 @@ async function ensureOwnedMessage(messageId: string, userId: string) {
 export async function addReply(input: AddReplyInput) {
   const userId = await requireUserId();
   const message = await ensureOwnedMessage(input.messageId, userId);
+  logger.info("actions/conversations", "add reply start", {
+    messageId: input.messageId,
+    role: input.role,
+  });
 
   const existing = await db.query.conversations.findFirst({
     where: eq(conversations.messageId, input.messageId),
@@ -38,6 +43,10 @@ export async function addReply(input: AddReplyInput) {
 
     revalidatePath(`/prospects/${message.prospectId}`);
     revalidatePath("/dashboard");
+    logger.info("actions/conversations", "add reply success", {
+      messageId: input.messageId,
+      turnCount: 1,
+    });
     return created;
   }
 
@@ -49,5 +58,9 @@ export async function addReply(input: AddReplyInput) {
 
   revalidatePath(`/prospects/${message.prospectId}`);
   revalidatePath("/dashboard");
+  logger.info("actions/conversations", "append reply success", {
+    messageId: input.messageId,
+    turnCount: updated.thread.length,
+  });
   return updated;
 }

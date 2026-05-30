@@ -1,6 +1,7 @@
 "use server";
 
 import { extractFromScreenshot, extractFromUrl } from "@/lib/scraper";
+import { logger } from "@/lib/logger";
 import { addInput } from "./mutations";
 import type { AddInputWithExtractionPayload } from "./types";
 
@@ -11,6 +12,11 @@ export async function addInputWithExtraction(
   if (!payload.prospectId || !payload.type || !rawValue) {
     throw new Error("Invalid input payload");
   }
+
+  logger.info("actions/prospects", "add input with extraction start", {
+    prospectId: payload.prospectId,
+    type: payload.type,
+  });
 
   let extractedText = "";
 
