@@ -1,4 +1,3 @@
-// db/schema.ts
 import {
   boolean,
   integer,
