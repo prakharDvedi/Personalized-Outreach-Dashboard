@@ -44,7 +44,7 @@ export async function generateMessageStream({
 }: GenerateStreamParams): Promise<Response> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
-    throw new Error("OPENROUTER_API_KEY is required");
+    console.warn("OPENROUTER_API_KEY is required");
   }
 
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {

@@ -56,7 +56,7 @@ export async function extractFromUrl(url: string): Promise<string> {
 export async function extractFromScreenshot(base64: string): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
-    throw new Error("OPENROUTER_API_KEY is required");
+    console.warn("OPENROUTER_API_KEY is required");
   }
 
   const visionModel =

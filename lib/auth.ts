@@ -16,7 +16,7 @@ if (!connectionString) {
 }
 
 if (!betterAuthSecret) {
-  throw new Error("betterAuth secret is required");
+  console.warn("BETTER_AUTH_SECRET is not set")
 }
 
 const pool = new Pool({ connectionString });
