@@ -6,6 +6,7 @@ import { userPrompts } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { DEFAULT_SYSTEM_PROMPT } from "@/lib/prompts";
 import { PromptEditor } from "@/components/prompt/prompt-editor";
+export const dynamic = 'force-dynamic'
 
 export default async function PromptPage() {
   const session = await auth.api.getSession({ headers: await headers() });

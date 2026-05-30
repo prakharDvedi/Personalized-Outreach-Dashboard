@@ -14,6 +14,8 @@ type DailyPoint = {
   total: number;
 };
 
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;

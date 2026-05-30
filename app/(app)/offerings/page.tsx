@@ -3,6 +3,8 @@ import { createOffering, listOfferings } from "@/actions/offerings";
 import { CreateOfferingForm } from "@/components/offerings/create-offering-form";
 import { OfferingList } from "@/components/offerings/offering-list";
 
+export const dynamic = 'force-dynamic'
+
 export default async function OfferingsPage() {
   const offeringList = await listOfferings();
 
