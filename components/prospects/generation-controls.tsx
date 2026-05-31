@@ -2,6 +2,8 @@
 "use client";
 
 import type { OfferingOption } from "./types";
+import { ActionButton } from "@/components/ui/action-button";
+import { SelectField } from "@/components/ui/select-field";
 
 type Props = {
   offerings: OfferingOption[];
@@ -21,10 +23,9 @@ export function GenerationControls({
   return (
     <div className="space-y-3">
       <label className="text-sm font-medium">Offering</label>
-      <select
+      <SelectField
         value={selectedOfferingId}
         onChange={(event) => onOfferingChangeAction(event.target.value)}
-        className="w-full rounded-md border border-white-300 px-3 py-2 text-sm"
       >
         <option value="">Select offering</option>
         {offerings.map((offering) => (
@@ -32,16 +33,16 @@ export function GenerationControls({
             {offering.name}
           </option>
         ))}
-      </select>
+      </SelectField>
 
-      <button
+      <ActionButton
         type="button"
-        disabled={isGenerating}
+        busy={isGenerating}
+        pendingLabel="Generating..."
         onClick={onGenerateAction}
-        className="w-fit rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-white-800 disabled:opacity-50"
       >
-        {isGenerating ? "Generating..." : "Generate message"}
-      </button>
+        Generate message
+      </ActionButton>
     </div>
   );
 }

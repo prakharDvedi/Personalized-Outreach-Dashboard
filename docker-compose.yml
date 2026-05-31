@@ -1,7 +1,6 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: kakiyo-postgres
     environment:
       POSTGRES_DB: outreach
       POSTGRES_USER: postgres
@@ -20,7 +19,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: kakiyo-app
     env_file:
       - .env
     environment:

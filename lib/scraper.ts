@@ -26,13 +26,59 @@ function trimToTokenBudget(value: string): string {
   return `${value.slice(0, APPROX_CHARS_FOR_1500_TOKENS)}...`;
 }
 
+function extractTextFromHtml(html: string): string {
+  const withoutNoise = html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'");
+
+  return normalizeWhitespace(withoutNoise);
+}
+
+async function extractFallbackText(url: string): Promise<string> {
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      Accept: "text/html,application/xhtml+xml",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Fallback fetch failed with status ${response.status}`);
+  }
+
+  const html = await response.text();
+  const title = html.match(/<title[^>]*>(.*?)<\/title>/i)?.[1] ?? "";
+  const description =
+    html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)?.[1] ??
+    html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i)?.[1] ??
+    "";
+  const bodyText = extractTextFromHtml(html);
+
+  return normalizeWhitespace([title, description, bodyText].filter(Boolean).join("\n"));
+}
+
 export async function extractFromUrl(url: string): Promise<string> {
   try {
     logger.info("scraper/url", "extract start", { url });
 
     const result = await extract(url);
     const rawText = result?.content ?? result?.description ?? "";
-    const cleanText = normalizeWhitespace(rawText);
+    let cleanText = normalizeWhitespace(rawText);
+
+    if (!cleanText) {
+      logger.warn("scraper/url", "article extractor returned no text, using fallback", {
+        url,
+      });
+      cleanText = await extractFallbackText(url);
+    }
 
     if (!cleanText) {
       logger.warn("scraper/url", "no text extracted", { url });

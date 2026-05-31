@@ -1,11 +1,11 @@
 // this is the offering detail page where users can edit their offering briefs and import content from URLs
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { offerings } from "@/db/schema";
+import { getSessionUserId } from "@/lib/session";
 import { auth } from "@/lib/auth";
 import { extractFromUrl } from "@/lib/scraper";
 import { OfferingImportForm } from "@/components/offerings/offering-import-form";
@@ -15,13 +15,13 @@ type PageProps = {
   params: Promise<{ id: string }>;
 };
 
+export const dynamic = 'force-dynamic'
+
 export default async function OfferingDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const session = await auth.api.getSession({ headers: await headers() });
-  const userId = session?.user?.id;
-
+  const userId = await getSessionUserId();
   if (!userId) {
-    notFound();
+    redirect("/login");
   }
 
   const offering = await db.query.offerings.findFirst({
@@ -63,6 +63,7 @@ async function importFromUrlAction(formData: FormData) {
   const url = String(formData.get("url") ?? "").trim();
   if (!id || !url) return;
 
+  const { headers } = await import("next/headers");
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;
   if (!userId) return;
@@ -98,6 +99,7 @@ async function saveOfferingAction(formData: FormData) {
 
   if (!id || !name || !content) return;
 
+  const { headers } = await import("next/headers");
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;
   if (!userId) return;

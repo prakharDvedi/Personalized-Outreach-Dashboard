@@ -6,6 +6,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthCard } from "@/components/auth/auth-card";
 import { readErrorMessage } from "@/lib/parse-response";
+import { ActionButton } from "@/components/ui/action-button";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,12 +20,16 @@ export default function LoginPage() {
     setIsSubmitting(true);
     setErrorMessage("");
 
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 15000);
+
     try {
       const response = await fetch("/api/auth/sign-in/email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        signal: controller.signal,
         body: JSON.stringify({ email, password }),
       });
 
@@ -33,11 +38,16 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/dashboard");
+      router.replace("/dashboard");
       router.refresh();
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Unable to sign in.");
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setErrorMessage("Sign in timed out. Please try again.");
+      } else {
+        setErrorMessage(err instanceof Error ? err.message : "Unable to sign in.");
+      }
     } finally {
+      window.clearTimeout(timeoutId);
       setIsSubmitting(false);
     }
   };
@@ -77,13 +87,9 @@ export default function LoginPage() {
 
         {errorMessage ? <p className="text-sm text-red-600">{errorMessage}</p> : null}
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full rounded-md bg-black px-3 py-2 text-sm font-medium text-white transition hover:bg-white-800 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isSubmitting ? "Signing in..." : "Sign in"}
-        </button>
+        <ActionButton type="submit" busy={isSubmitting} pendingLabel="Signing in...">
+          Sign in
+        </ActionButton>
 
       </form>
     </AuthCard>

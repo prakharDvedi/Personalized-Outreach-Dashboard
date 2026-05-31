@@ -1,11 +1,18 @@
 // this is the main page for managing offerings.
+import { redirect } from "next/navigation";
 import { createOffering, listOfferings } from "@/actions/offerings";
+import { getSessionUserId } from "@/lib/session";
 import { CreateOfferingForm } from "@/components/offerings/create-offering-form";
 import { OfferingList } from "@/components/offerings/offering-list";
 
 export const dynamic = 'force-dynamic'
 
 export default async function OfferingsPage() {
+  const userId = await getSessionUserId();
+  if (!userId) {
+    redirect("/login");
+  }
+
   const offeringList = await listOfferings();
 
   return (
@@ -30,10 +37,11 @@ async function createOfferingAction(formData: FormData) {
 
   const name = String(formData.get("name") ?? "");
   const content = String(formData.get("content") ?? "");
+  const sourceUrlRaw = String(formData.get("sourceUrl") ?? "").trim();
 
   await createOffering({
     name,
     content,
-    sourceUrl: null,
+    sourceUrl: sourceUrlRaw || null,
   });
 }

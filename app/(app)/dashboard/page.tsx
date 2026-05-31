@@ -1,8 +1,8 @@
 // dashboard page that shows user info and has a logout button
 
-import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { and, count, desc, eq, gte, sql } from "drizzle-orm";
-import { auth } from "@/lib/auth";
+import { getSessionUserId } from "@/lib/session";
 import { db } from "@/db";
 import { conversations, messages, offerings, prospects } from "@/db/schema";
 import { MessagesChart } from "@/components/dashboard/message-chart";
@@ -17,11 +17,9 @@ type DailyPoint = {
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  const userId = session?.user?.id;
-
+  const userId = await getSessionUserId();
   if (!userId) {
-    throw new Error("Unauthorized");
+    redirect("/login");
   }
 
   const sevenDaysAgo = new Date();

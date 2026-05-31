@@ -4,6 +4,8 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { addInputFromFormData, type AddInputFormState } from "@/actions/prospects";
 import type { ProspectInput } from "@/db/schema";
+import { ActionButton } from "@/components/ui/action-button";
+import { SelectField } from "@/components/ui/select-field";
 
 type Props = {
   prospectId: string;
@@ -113,11 +115,10 @@ export function AddInputForm({ prospectId }: Props) {
       className="mt-3 grid gap-2"
     >
       <input type="hidden" name="prospectId" value={prospectId} />
-      <select
+      <SelectField
         value={type}
         onChange={(event) => setType(event.target.value as ProspectInput["type"])}
         name="type"
-        className="rounded-md border border-white-300 px-3 py-2 text-sm"
       >
         <option value="linkedin_screenshot">LinkedIn screenshot</option>
         <option value="github_url">GitHub URL</option>
@@ -125,7 +126,7 @@ export function AddInputForm({ prospectId }: Props) {
         <option value="company_website">Company website</option>
         <option value="url">Any URL</option>
         <option value="free_text">Free text</option>
-      </select>
+      </SelectField>
 
       {isScreenshot ? (
         <div className="grid gap-2">
@@ -155,13 +156,14 @@ export function AddInputForm({ prospectId }: Props) {
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
-      <button
+      <ActionButton
         type="submit"
-        disabled={busy || (isScreenshot && !file)}
-        className="w-fit rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-white-800 disabled:opacity-50"
+        busy={busy}
+        disabled={isScreenshot && !file}
+        pendingLabel="Adding..."
       >
-        {busy ? "Adding..." : "Add input"}
-      </button>
+        Add input
+      </ActionButton>
     </form>
   );
 }

@@ -5,6 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { offerings } from "@/db/schema";
 import { logger } from "@/lib/logger";
+import { extractFromUrl } from "@/lib/scraper";
 import { requireUserId } from "./auth";
 import type { OfferingInput } from "./types";
 
@@ -64,4 +65,71 @@ export async function deleteOffering(id: string) {
   revalidatePath("/offerings");
   logger.info("actions/offerings", "delete success", { offeringId: id });
   return deleted.id;
+}
+
+export type ImportOfferingFromUrlState = {
+  error: string | null;
+  sourceUrl: string;
+  content: string;
+  success: boolean;
+  nonce: number;
+};
+
+const initialImportState: ImportOfferingFromUrlState = {
+  error: null,
+  sourceUrl: "",
+  content: "",
+  success: false,
+  nonce: 0,
+};
+
+function failImport(message: string): ImportOfferingFromUrlState {
+  return { ...initialImportState, error: message };
+}
+
+function succeedImport(sourceUrl: string, content: string): ImportOfferingFromUrlState {
+  return {
+    error: null,
+    sourceUrl,
+    content,
+    success: true,
+    nonce: Date.now(),
+  };
+}
+
+export async function importOfferingFromUrl(
+  _prevState: ImportOfferingFromUrlState,
+  formData: FormData,
+): Promise<ImportOfferingFromUrlState> {
+  try {
+    const sourceUrl = String(formData.get("sourceUrl") ?? "").trim();
+
+    if (!sourceUrl) {
+      return failImport("Add a URL first.");
+    }
+
+    logger.info("actions/offerings", "import start", { sourceUrl });
+
+    const content = await extractFromUrl(sourceUrl);
+
+    if (!content.trim()) {
+      return failImport("No readable content could be extracted from that URL.");
+    }
+
+    logger.info("actions/offerings", "import success", {
+      sourceUrl,
+      chars: content.length,
+    });
+
+    return succeedImport(sourceUrl, content);
+  } catch (error) {
+    logger.error(
+      "actions/offerings",
+      error instanceof Error ? error.message : "unknown import failure",
+    );
+
+    return failImport(
+      error instanceof Error ? error.message : "Failed to import URL",
+    );
+  }
 }

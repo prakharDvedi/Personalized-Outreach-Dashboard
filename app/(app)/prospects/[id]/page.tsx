@@ -1,11 +1,10 @@
 // This is the prospect detail page where users can see all the inputs they've added for a prospect, the compiled context extracted from those inputs, and generate outreach messages based on that context and a selected offering.
 
-import { notFound } from "next/navigation";
-import { headers } from "next/headers";
+import { notFound, redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { auth } from "@/lib/auth";
 import { offerings } from "@/db/schema";
+import { getSessionUserId } from "@/lib/session";
 import { getProspectById } from "@/actions/prospects";
 import { listMessagesByProspect } from "@/actions/messages";
 import { GeneratorPanel } from "@/components/prospects/generator-panel";
@@ -17,13 +16,13 @@ type PageProps = {
   params: Promise<{ id: string }>;
 };
 
+export const dynamic = 'force-dynamic'
+
 export default async function ProspectDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const session = await auth.api.getSession({ headers: await headers() });
-  const userId = session?.user?.id;
-
+  const userId = await getSessionUserId();
   if (!userId) {
-    notFound();
+    redirect("/login");
   }
 
   const prospect = await getProspectById(id);

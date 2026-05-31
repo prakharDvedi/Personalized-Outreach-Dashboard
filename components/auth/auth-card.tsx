@@ -28,7 +28,7 @@ export function AuthCard({
         {children}
         <p className="text-sm text-white/80">
           {footerText}{" "}
-          <Link href={footerHref} className="font-medium text-black underline">
+          <Link href={footerHref} className="font-medium text-white underline">
             {footerLabel}
           </Link>
         </p>

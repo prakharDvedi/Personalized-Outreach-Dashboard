@@ -6,6 +6,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthCard } from "@/components/auth/auth-card";
 import { readErrorMessage } from "@/lib/parse-response";
+import { ActionButton } from "@/components/ui/action-button";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -20,12 +21,16 @@ export default function SignupPage() {
     setIsSubmitting(true);
     setErrorMessage("");
 
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 15000);
+
     try {
       const response = await fetch("/api/auth/sign-up/email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        signal: controller.signal,
         body: JSON.stringify({ name, email, password }),
       });
 
@@ -34,11 +39,18 @@ export default function SignupPage() {
         return;
       }
 
-      router.push("/dashboard");
+      router.replace("/dashboard");
       router.refresh();
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Unable to create account.");
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setErrorMessage("Account creation timed out. Please try again.");
+      } else {
+        setErrorMessage(
+          err instanceof Error ? err.message : "Unable to create account.",
+        );
+      }
     } finally {
+      window.clearTimeout(timeoutId);
       setIsSubmitting(false);
     }
   };
@@ -91,13 +103,9 @@ export default function SignupPage() {
 
         {errorMessage ? <p className="text-sm text-red-600">{errorMessage}</p> : null}
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full rounded-md bg-black px-3 py-2 text-sm font-medium text-white transition hover:bg-white-800 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isSubmitting ? "Creating..." : "Create account"}
-        </button>
+        <ActionButton type="submit" busy={isSubmitting} pendingLabel="Creating...">
+          Create account
+        </ActionButton>
       </form>
     </AuthCard>
   );
