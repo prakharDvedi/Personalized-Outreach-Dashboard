@@ -13,6 +13,11 @@ It lets you:
 - handle replies and follow-up threads
 - view basic dashboard analytics
 
+## Snippets
+
+<img width="1638" height="665" alt="image" src="https://github.com/user-attachments/assets/5019b8f3-605c-40b9-846a-d783e9793242" />
+<img width="1576" height="784" alt="image" src="https://github.com/user-attachments/assets/a2fad271-5294-479e-8d03-248098355b0f" />
+
 ## Stack
 
 - Next.js 16
