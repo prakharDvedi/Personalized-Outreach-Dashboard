@@ -13,6 +13,10 @@ It lets you:
 - handle replies and follow-up threads
 - view basic dashboard analytics
 
+## test account
+mail - abc@gmail.com
+pass - 12345678
+
 ## Snippets
 
 <img width="1638" height="665" alt="image" src="https://github.com/user-attachments/assets/5019b8f3-605c-40b9-846a-d783e9793242" />
@@ -176,6 +180,15 @@ npm run migrate
 
 
 ## example outputs
+**Inputs**
+company website
+https://kakiyo.com/
+
+linkedin screenshot
+Screenshot 2026-05-31 192644.png
+
+free text
+Personalized LinkedIn Conversations at Scale. Every message is unique. Kakiyo handles replies, objections, qualification, and meeting booking — so you focus on closing.
 ```
 Ayush, your banner says "Ship! Ship! Ship!" and it shows. Kakiyo's positioning around real conversations at scale, not robotic sequences, is sharp. The cloud-based approach with no Chrome extension risk is a genuine differentiator in a space where account safety is a real concern.
 
@@ -183,6 +196,23 @@ We built Zecruit to solve a similar problem on the hiring side. Our AI handles c
 
 Curious if you've thought about how your own hiring pipeline works at Kakiyo. Are you running that manually or have you productized it yet?
 ```
+**Inputs**
+
+Sindre Sorhus
+Add inputs to build prospect context.
+
+Current inputs
+github url
+https://github.com/sindresorhus
+
+personal website
+https://sindresorhus.com
+
+free text
+Maintains many widely used developer utilities; strong fit for tooling reliability and automation cleanup.
+
+linkedin screenshot
+Screenshot 2026-05-31 113629.png
 
 ```
 Sindre — I've been looking at your work maintaining so many small utilities. Managing hundreds of packages with consistent releases takes real discipline.
@@ -192,6 +222,16 @@ We help maintainers tighten up their release loops — cutting flaky checks, red
 Curious whether you've found any particular patterns in how your packages break in CI, or if the release flow mostly hums along these days?
 ```
 
+**Inputs**
+Current inputs
+github url
+https://github.com/vercel
+
+company website
+https://vercel.com
+
+free text
+Public-facing infra team with heavy developer tooling and release velocity. Good fit for CI flake reduction and deployment confidence work.
 ```
 Your Workflow SDK and Sandbox repos show you're building infrastructure that needs to be rock-solid and fast to iterate on.
 
