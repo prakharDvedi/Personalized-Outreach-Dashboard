@@ -6,7 +6,10 @@ AI-powered outreach platform. Define what you sell, save a prospect with any com
 
 ## Live demo
 
-> [Insert deployed Railway URL here]
+> https://personalized-outreach-dashboard-three.vercel.app/
+>
+> <img width="1638" height="665" alt="image" src="https://github.com/user-attachments/assets/5019b8f3-605c-40b9-846a-d783e9793242" />
+
 
 **Test credentials**
 ```
