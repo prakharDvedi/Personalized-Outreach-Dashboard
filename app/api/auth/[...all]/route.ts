@@ -4,9 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextResponse } from "next/server";
 import { toNextJsHandler } from "better-auth/next-js";
-import { auth } from "@/lib/auth";
-
-const { GET: authGET, POST: authPOST } = toNextJsHandler(auth);
+import { getAuthClient } from "@/lib/auth";
 
 function handleAuthError(error: unknown) {
   const message = error instanceof Error ? error.message : "Authentication failed";
@@ -16,6 +14,7 @@ function handleAuthError(error: unknown) {
 
 export async function GET(request: Request) {
   try {
+    const { GET: authGET } = toNextJsHandler(getAuthClient());
     return await authGET(request);
   } catch (error) {
     return handleAuthError(error);
@@ -24,6 +23,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const { POST: authPOST } = toNextJsHandler(getAuthClient());
     return await authPOST(request);
   } catch (error) {
     return handleAuthError(error);

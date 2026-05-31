@@ -12,29 +12,56 @@ function getRequiredEnv(name: string) {
   return value;
 }
 
-const fallbackBaseURL = getRequiredEnv("BETTER_AUTH_URL");
-const secret = getRequiredEnv("BETTER_AUTH_SECRET");
+function createAuthClient() {
+  const fallbackBaseURL = getRequiredEnv("BETTER_AUTH_URL");
+  const secret = getRequiredEnv("BETTER_AUTH_SECRET");
 
-export const auth = betterAuth({
-  secret,
-  baseURL: {
-    allowedHosts: ["localhost:3000", "127.0.0.1:3000", "*.vercel.app"],
-    fallback: fallbackBaseURL,
-    protocol: process.env.NODE_ENV === "development" ? "http" : "https",
-  },
-  onAPIError: {
-    throw: true,
-    onError: (error) => {
-      console.error("[better-auth]", error);
+  return betterAuth({
+    secret,
+    baseURL: {
+      allowedHosts: ["localhost:3000", "127.0.0.1:3000", "*.vercel.app"],
+      fallback: fallbackBaseURL,
+      protocol: process.env.NODE_ENV === "development" ? "http" : "https",
     },
+    onAPIError: {
+      throw: true,
+      onError: (error) => {
+        console.error("[better-auth]", error);
+      },
+    },
+    plugins: [nextCookies()],
+    database: drizzleAdapter(db, {
+      provider: "pg",
+      schema: { ...schema, user: schema.appUsers, users: schema.appUsers },
+      usePlural: true,
+    }),
+    emailAndPassword: {
+      enabled: true,
+    },
+  });
+}
+
+type AuthClient = ReturnType<typeof createAuthClient>;
+
+let cachedAuth: AuthClient | undefined;
+
+export function getAuthClient(): AuthClient {
+  if (!cachedAuth) {
+    cachedAuth = createAuthClient();
+  }
+
+  return cachedAuth;
+}
+
+export const auth = new Proxy({} as AuthClient, {
+  get(_target, prop) {
+    const client = getAuthClient() as Record<PropertyKey, unknown>;
+    const value = client[prop];
+
+    if (typeof value === "function") {
+      return value.bind(client);
+    }
+
+    return value;
   },
-  plugins: [nextCookies()],
-  database: drizzleAdapter(db, {
-    provider: "pg",
-    schema: { ...schema, user: schema.appUsers, users: schema.appUsers },
-    usePlural: true,
-  }),
-  emailAndPassword: {
-    enabled: true,
-  },
-});
+}) as AuthClient;

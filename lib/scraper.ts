@@ -5,6 +5,7 @@ import type { ProspectInput } from "@/db/schema";
 import { logger } from "@/lib/logger";
 
 const APPROX_CHARS_FOR_1500_TOKENS = 6000;
+const DEFAULT_VISION_MODELS = ["openrouter/free", "nvidia/nemotron-nano-12b-v2-vl:free"];
 
 type OpenRouterVisionResponse = {
   choices?: Array<{
@@ -53,88 +54,124 @@ export async function extractFromUrl(url: string): Promise<string> {
   }
 }
 
-export async function extractFromScreenshot(
+async function requestVisionExtraction(
   base64: string,
-  mimeType = "image/png",
+  mimeType: string,
+  model: string,
 ): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     console.warn("OPENROUTER_API_KEY is required");
   }
 
-  const visionModel =
-    process.env.VISION_MODEL ?? process.env.AI_MODEL ?? "deepseek/deepseek-v3-0324:free";
+  logger.info("scraper/screenshot", "extract start", {
+    model,
+    base64Chars: base64.length,
+  });
 
-  try {
-    logger.info("scraper/screenshot", "extract start", {
-      model: visionModel,
-      base64Chars: base64.length,
-    });
-
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
-        "X-Title": "Kakiyo Outreach",
-      },
-      body: JSON.stringify({
-        model: visionModel,
-        temperature: 0.2,
-        max_tokens: 500,
-        messages: [
-          {
-            role: "system",
-            content:
-              "Extract outreach-relevant details from this screenshot. Return only structured plain text under headings: Person, Role, Company, Current Work, Signals, Conversation Hooks.",
-          },
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Read this screenshot and extract concise facts useful for writing personalized cold outreach.",
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
+      "X-Title": "Kakiyo Outreach",
+    },
+    body: JSON.stringify({
+      model,
+      temperature: 0.2,
+      max_tokens: 500,
+      messages: [
+        {
+          role: "system",
+          content:
+            "Extract outreach-relevant details from this screenshot. Return only structured plain text under headings: Person, Role, Company, Current Work, Signals, Conversation Hooks.",
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Read this screenshot and extract concise facts useful for writing personalized cold outreach.",
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:${mimeType};base64,${base64}`,
               },
-              {
-                type: "image_url",
-                image_url: {
-                  url: `data:${mimeType};base64,${base64}`,
-                },
-              },
-            ],
-          },
-        ],
-      }),
+            },
+          ],
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    const normalizedError = normalizeWhitespace(text);
+
+    logger.error("scraper/screenshot", "extract failed", {
+      model,
+      status: response.status,
     });
 
-    if (!response.ok) {
-      const text = await response.text();
-      logger.error("scraper/screenshot", "extract failed", {
-        model: visionModel,
-        status: response.status,
-      });
-      throw new Error(`Screenshot extraction failed: ${text}`);
-    }
-
-    const data = (await response.json()) as OpenRouterVisionResponse;
-    const content = data.choices?.[0]?.message?.content ?? "";
-    const normalized = normalizeWhitespace(content);
-
-    logger.info("scraper/screenshot", "extract success", {
-      model: visionModel,
-      chars: normalized.length,
-    });
-
-    return normalized;
-  } catch (err: unknown) {
-    logger.error(
-      "scraper/screenshot",
-      err instanceof Error ? err.message : "unknown extraction error",
-      { model: visionModel },
-    );
-    throw err;
+    throw new Error(`Screenshot extraction failed: ${normalizedError}`);
   }
+
+  const data = (await response.json()) as OpenRouterVisionResponse;
+  const content = data.choices?.[0]?.message?.content ?? "";
+  const normalized = normalizeWhitespace(content);
+
+  logger.info("scraper/screenshot", "extract success", {
+    model,
+    chars: normalized.length,
+  });
+
+  return normalized;
+}
+
+export async function extractFromScreenshot(
+  base64: string,
+  mimeType = "image/png",
+): Promise<string> {
+  const envVisionModel = process.env.VISION_MODEL?.trim();
+  const visionModels = [
+    envVisionModel || "",
+    ...DEFAULT_VISION_MODELS,
+  ].filter((model, index, all) => Boolean(model) && all.indexOf(model) === index);
+
+  let lastError: unknown = null;
+
+  for (const model of visionModels) {
+    try {
+      return await requestVisionExtraction(base64, mimeType, model);
+    } catch (error) {
+      lastError = error;
+      const message = error instanceof Error ? error.message : String(error);
+
+      if (!message.includes("not a valid model ID")) {
+        continue;
+      }
+
+      logger.warn("scraper/screenshot", "model rejected, trying fallback", {
+        model,
+      });
+    }
+  }
+
+  logger.error(
+    "scraper/screenshot",
+    lastError instanceof Error ? lastError.message : "unknown extraction error",
+    {
+      modelsTried: visionModels.join(", "),
+    },
+  );
+
+  if (lastError instanceof Error) {
+    throw lastError;
+  }
+
+  throw new Error("Screenshot extraction failed");
 }
 
 export function compileProspectContext(inputs: ProspectInput[]): string {
