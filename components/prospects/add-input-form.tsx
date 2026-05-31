@@ -1,8 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { addInputWithExtraction } from "@/actions/prospects";
+import { addInputFromFormData } from "@/actions/prospects";
 import type { ProspectInput } from "@/db/schema";
 
 type Props = {
@@ -10,7 +9,6 @@ type Props = {
 };
 
 export function AddInputForm({ prospectId }: Props) {
-  const router = useRouter();
   const [type, setType] = useState<ProspectInput["type"]>("url");
   const [rawValue, setRawValue] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -19,57 +17,29 @@ export function AddInputForm({ prospectId }: Props) {
 
   const isScreenshot = type === "linkedin_screenshot";
 
-  const readFileAsBase64 = async (imageFile: File): Promise<string> => {
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result ?? ""));
-      reader.onerror = () => reject(new Error("Failed to read image file"));
-      reader.readAsDataURL(imageFile);
-    });
-
-    const base64 = dataUrl.split(",")[1] ?? "";
-    if (!base64) {
-      throw new Error("Invalid image file");
-    }
-
-    return base64;
-  };
-
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
     setError("");
 
     try {
+      const formData = new FormData(event.currentTarget);
+
       if (isScreenshot) {
         if (!file) {
           throw new Error("Upload a LinkedIn screenshot first");
         }
 
-        const base64 = await readFileAsBase64(file);
-
-        await addInputWithExtraction({
-          prospectId,
-          type,
-          rawValue: file.name,
-          screenshotBase64: base64,
-        });
-      } else {
-        const trimmed = rawValue.trim();
-        if (!trimmed) {
-          throw new Error("Input value is required");
-        }
-
-        await addInputWithExtraction({
-          prospectId,
-          type,
-          rawValue: trimmed,
-        });
+        formData.set("rawValue", file.name);
+        formData.set("screenshotName", file.name);
       }
+
+      await addInputFromFormData(formData);
 
       setRawValue("");
       setFile(null);
-      router.refresh();
+      setType("url");
+      event.currentTarget.reset();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to add input");
     } finally {
@@ -78,10 +48,12 @@ export function AddInputForm({ prospectId }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mt-3 grid gap-2">
+    <form onSubmit={handleSubmit} className="mt-3 grid gap-2" encType="multipart/form-data">
+      <input type="hidden" name="prospectId" value={prospectId} />
       <select
         value={type}
         onChange={(event) => setType(event.target.value as ProspectInput["type"])}
+        name="type"
         className="rounded-md border border-white-300 px-3 py-2 text-sm"
       >
         <option value="linkedin_screenshot">LinkedIn screenshot</option>
@@ -95,12 +67,14 @@ export function AddInputForm({ prospectId }: Props) {
       {isScreenshot ? (
         <input
           type="file"
+          name="screenshot"
           accept="image/*"
           onChange={(event) => setFile(event.target.files?.[0] ?? null)}
           className="rounded-md border border-white-300 px-3 py-2 text-sm"
         />
       ) : (
         <textarea
+          name="rawValue"
           value={rawValue}
           onChange={(event) => setRawValue(event.target.value)}
           rows={5}
