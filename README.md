@@ -143,3 +143,18 @@ npm run migrate
 - Route protection happens in `proxy.ts`.
 - The dashboard and prospect pages read directly from the database on the server.
 
+## Tradeoffs made and why
+
+- **Drizzle + raw SQL joins** - Drizzle keeps the schema type-safe, while a few raw SQL expressions make the dashboard queries easier to express.
+- **Stored extracted context** - prospect inputs are extracted once and saved, so generation does not have to scrape again every time.
+- **add feedback loop** - this might help in better response generation
+- **folder structure** - more files, but each one is smaller and easier to understand than a set of mega files.
+
+## What I would do with more time
+
+- add end-to-end tests for sign-in, offering creation, prospect enrichment, generation, and replies
+- improve URL extraction for more sites
+- add a cleaner live preview when importing offering content
+- add better empty/error states in the dashboard and prospect pages
+- better frontend UI
+- add message export features
