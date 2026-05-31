@@ -7,3 +7,4 @@ export type {
   AddInputWithExtractionPayload,
   UpdateProspectContextPayload,
 } from "./prospects/types";
+export type { AddInputFormState } from "./prospects/extraction";

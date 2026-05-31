@@ -53,7 +53,10 @@ export async function extractFromUrl(url: string): Promise<string> {
   }
 }
 
-export async function extractFromScreenshot(base64: string): Promise<string> {
+export async function extractFromScreenshot(
+  base64: string,
+  mimeType = "image/png",
+): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     console.warn("OPENROUTER_API_KEY is required");
@@ -96,7 +99,7 @@ export async function extractFromScreenshot(base64: string): Promise<string> {
               {
                 type: "image_url",
                 image_url: {
-                  url: `data:image/png;base64,${base64}`,
+                  url: `data:${mimeType};base64,${base64}`,
                 },
               },
             ],

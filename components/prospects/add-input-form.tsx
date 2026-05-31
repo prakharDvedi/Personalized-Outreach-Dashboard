@@ -1,54 +1,117 @@
 "use client";
 
-import { useState } from "react";
-import { addInputFromFormData } from "@/actions/prospects";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { addInputFromFormData, type AddInputFormState } from "@/actions/prospects";
 import type { ProspectInput } from "@/db/schema";
 
 type Props = {
   prospectId: string;
 };
 
+const initialState: AddInputFormState = {
+  error: null,
+  success: false,
+  nonce: 0,
+};
+
+async function compressScreenshot(file: File): Promise<File> {
+  const bitmap = await createImageBitmap(file);
+  const maxWidth = 1600;
+  const scale = Math.min(1, maxWidth / bitmap.width);
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    throw new Error("Could not prepare the screenshot");
+  }
+
+  canvas.width = width;
+  canvas.height = height;
+  context.drawImage(bitmap, 0, 0, width, height);
+
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (value) => {
+        if (value) {
+          resolve(value);
+          return;
+        }
+        reject(new Error("Could not compress the screenshot"));
+      },
+      "image/jpeg",
+      0.82,
+    );
+  });
+
+  const nextName = file.name.replace(/\.[^.]+$/, "") || "screenshot";
+  return new File([blob], `${nextName}.jpg`, { type: "image/jpeg" });
+}
+
 export function AddInputForm({ prospectId }: Props) {
+  const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+  const [state, formAction, pending] = useActionState(
+    addInputFromFormData,
+    initialState,
+  );
   const [type, setType] = useState<ProspectInput["type"]>("url");
   const [rawValue, setRawValue] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [isPreparing, setIsPreparing] = useState(false);
+  const [localError, setLocalError] = useState("");
 
   const isScreenshot = type === "linkedin_screenshot";
+  const busy = pending || isPreparing;
+  const error = localError || state.error || "";
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsSubmitting(true);
-    setError("");
+  useEffect(() => {
+    if (!state.success) {
+      return;
+    }
+
+    setType("url");
+    setRawValue("");
+    setFile(null);
+    setLocalError("");
+    formRef.current?.reset();
+    router.refresh();
+  }, [router, state.nonce, state.success]);
+
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const nextFile = event.target.files?.[0] ?? null;
+    setLocalError("");
+
+    if (!nextFile) {
+      setFile(null);
+      return;
+    }
 
     try {
-      const formData = new FormData(event.currentTarget);
-
-      if (isScreenshot) {
-        if (!file) {
-          throw new Error("Upload a LinkedIn screenshot first");
-        }
-
-        formData.set("rawValue", file.name);
-        formData.set("screenshotName", file.name);
-      }
-
-      await addInputFromFormData(formData);
-
-      setRawValue("");
-      setFile(null);
-      setType("url");
-      event.currentTarget.reset();
+      setIsPreparing(true);
+      const optimized = await compressScreenshot(nextFile);
+      setFile(optimized);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to add input");
+      setFile(null);
+      setLocalError(
+        err instanceof Error ? err.message : "Failed to process screenshot",
+      );
     } finally {
-      setIsSubmitting(false);
+      setIsPreparing(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mt-3 grid gap-2" encType="multipart/form-data">
+    <form
+      ref={formRef}
+      action={formAction}
+      encType="multipart/form-data"
+      className="mt-3 grid gap-2"
+    >
       <input type="hidden" name="prospectId" value={prospectId} />
       <select
         value={type}
@@ -65,13 +128,20 @@ export function AddInputForm({ prospectId }: Props) {
       </select>
 
       {isScreenshot ? (
-        <input
-          type="file"
-          name="screenshot"
-          accept="image/*"
-          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-          className="rounded-md border border-white-300 px-3 py-2 text-sm"
-        />
+        <div className="grid gap-2">
+          <input
+            type="file"
+            name="screenshot"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="rounded-md border border-white-300 px-3 py-2 text-sm"
+          />
+          {file ? (
+            <p className="text-xs text-white/70">
+              Ready: {file.name} ({Math.round(file.size / 1024)} KB)
+            </p>
+          ) : null}
+        </div>
       ) : (
         <textarea
           name="rawValue"
@@ -87,10 +157,10 @@ export function AddInputForm({ prospectId }: Props) {
 
       <button
         type="submit"
-        disabled={isSubmitting}
+        disabled={busy || (isScreenshot && !file)}
         className="w-fit rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-white-800 disabled:opacity-50"
       >
-        {isSubmitting ? "Adding..." : "Add input"}
+        {busy ? "Adding..." : "Add input"}
       </button>
     </form>
   );
