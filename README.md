@@ -136,6 +136,19 @@ Run migrations against Supabase before or after deployment:
 npm run migrate
 ```
 
+### Architecture Decisions
+
+1. **Offering in system prompt, not user message** — system prompt is persistent context the model never forgets. In the user message it competes with prospect details and gets buried.
+
+2. **Screenshots via vision model, not OCR** — LinkedIn blocks scrapers. Vision model reads the image directly, returns structured context, needs no extra dependencies. `VISION_MODEL` env var keeps it independent from the generation model.
+
+3. **Extraction on input add, not at generation** — scrape once, store the result, reuse forever. Regenerating the same prospect costs zero scraping calls and zero rate limit risk.
+
+4. **JSONB for inputs and threads** — prospect inputs vary by type and count, conversation threads are always read whole. Fixed columns mean nullable fields and migrations for every new input type. JSONB handles any combination without schema changes.
+
+5. **Streaming is a route handler, not a server action** — server actions return values, they can't push tokens as they arrive. Only a route handler can return a `ReadableStream` body that the client reads chunk by chunk.
+
+6. **Ownership in SQL WHERE, not application code** — every query uses `and(eq(table.id, id), eq(table.userId, userId))`. Cross-user access is blocked at the database layer. You can't forget to check it because it's baked into the query itself.
 ## Notes
 
 - The app is structured to keep files small and reusable.
