@@ -7,16 +7,16 @@ AI-powered outreach platform. Define what you sell, save a prospect with any com
 ## Live demo
 
 > https://personalized-outreach-dashboard-three.vercel.app/
->
-> <img width="1638" height="665" alt="image" src="https://github.com/user-attachments/assets/5019b8f3-605c-40b9-846a-d783e9793242" />
-
 
 **Test credentials**
 ```
 email:    demo@kakiyo.com
 password: demo1234
 ```
+## Snippets
 
+<img width="1638" height="665" alt="image" src="https://github.com/user-attachments/assets/5019b8f3-605c-40b9-846a-d783e9793242" />
+<img width="1576" height="784" alt="image" src="https://github.com/user-attachments/assets/a2fad271-5294-479e-8d03-248098355b0f" />
 ---
 
 ## What it does
