@@ -7,7 +7,7 @@ import { db } from "@/db";
 import { offerings } from "@/db/schema";
 import { getSessionUserId } from "@/lib/session";
 import { auth } from "@/lib/auth";
-import { extractFromUrl } from "@/lib/scraper";
+import { extractFromUrl, sanitizeTextContent } from "@/lib/scraper";
 import { OfferingImportForm } from "@/components/offerings/offering-import-form";
 import { OfferingEditForm } from "@/components/offerings/offering-edit-form";
 
@@ -50,7 +50,7 @@ export default async function OfferingDetailPage({ params }: PageProps) {
         offeringId={offering.id}
         name={offering.name}
         sourceUrl={offering.sourceUrl}
-        content={offering.content}
+        content={sanitizeTextContent(offering.content)}
       />
     </main>
   );
@@ -109,7 +109,7 @@ async function saveOfferingAction(formData: FormData) {
     .set({
       name,
       sourceUrl: sourceUrlRaw || null,
-      content,
+      content: sanitizeTextContent(content),
       updatedAt: new Date(),
     })
     .where(and(eq(offerings.id, id), eq(offerings.userId, userId)));

@@ -19,6 +19,41 @@ function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, " ").trim();
 }
 
+function decodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">");
+}
+
+function stripHtmlTags(value: string): string {
+  return decodeHtmlEntities(
+    value
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+      .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/p>/gi, "\n")
+      .replace(/<\/div>/gi, "\n")
+      .replace(/<\/li>/gi, "\n")
+      .replace(/<\/h[1-6]>/gi, "\n")
+      .replace(/<[^>]+>/g, " "),
+  );
+}
+
+function cleanExtractedText(value: string): string {
+  const stripped = stripHtmlTags(value);
+  return normalizeWhitespace(stripped);
+}
+
+export function sanitizeTextContent(value: string): string {
+  return cleanExtractedText(value);
+}
+
 function trimToTokenBudget(value: string): string {
   if (value.length <= APPROX_CHARS_FOR_1500_TOKENS) {
     return value;
@@ -27,18 +62,7 @@ function trimToTokenBudget(value: string): string {
 }
 
 function extractTextFromHtml(html: string): string {
-  const withoutNoise = html
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
-    .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'");
-
-  return normalizeWhitespace(withoutNoise);
+  return cleanExtractedText(html);
 }
 
 async function extractFallbackText(url: string): Promise<string> {
@@ -71,7 +95,7 @@ export async function extractFromUrl(url: string): Promise<string> {
 
     const result = await extract(url);
     const rawText = result?.content ?? result?.description ?? "";
-    let cleanText = normalizeWhitespace(rawText);
+    let cleanText = cleanExtractedText(rawText);
 
     if (!cleanText) {
       logger.warn("scraper/url", "article extractor returned no text, using fallback", {
@@ -166,7 +190,7 @@ async function requestVisionExtraction(
 
   const data = (await response.json()) as OpenRouterVisionResponse;
   const content = data.choices?.[0]?.message?.content ?? "";
-  const normalized = normalizeWhitespace(content);
+  const normalized = cleanExtractedText(content);
 
   logger.info("scraper/screenshot", "extract success", {
     model,
