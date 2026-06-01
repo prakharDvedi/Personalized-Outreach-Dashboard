@@ -13,6 +13,79 @@ It lets you:
 - handle replies and follow-up threads
 - view basic dashboard analytics
 
+**Test credentials**
+```
+email:    abc@gmail.com
+password: abcdefgh
+```
+## Example outputs
+
+These are real generations from the app. Inputs shown, output shown.
+
+---
+
+**Prospect: Ayush (Kakiyo)**
+
+Inputs: company website (`kakiyo.com`), LinkedIn screenshot, free text about positioning
+
+```
+Ayush, your banner says "Ship! Ship! Ship!" and it shows. Kakiyo's positioning around real 
+conversations at scale, not robotic sequences, is sharp. The cloud-based approach with no 
+Chrome extension risk is a genuine differentiator in a space where account safety is a real concern.
+
+We built Zecruit to solve a similar problem on the hiring side. Our AI handles candidate outreach, 
+qualification, and screening at scale while keeping human expertise in the loop for quality. 
+Companies like Medhavi, Masters Union, and Apollo Finvest use it to cut recruiter time spent 
+on outreach by 80%.
+
+Curious if you've thought about how your own hiring pipeline works at Kakiyo. Are you running 
+that manually or have you productized it yet?
+```
+
+The opening references his actual LinkedIn banner. The offering is introduced in one sentence, not a pitch. Ends with a question about his own problem, not a meeting request.
+
+---
+
+**Prospect: Sindre Sorhus**
+
+Inputs: GitHub (`github.com/sindresorhus`), personal website, LinkedIn screenshot, free text
+
+```
+Sindre — I've been looking at your work maintaining so many small utilities. Managing hundreds 
+of packages with consistent releases takes real discipline.
+
+We help maintainers tighten up their release loops — cutting flaky checks, reducing re-runs, 
+and making CI more predictable. It's the kind of thing that matters most when you're shipping 
+often across a large surface.
+
+Curious whether you've found any particular patterns in how your packages break in CI, or if 
+the release flow mostly hums along these days?
+```
+
+GitHub context drove the opening — the model read his actual repo patterns. The offering is one sentence. The closing question is about his specific workflow, not a generic ask.
+
+---
+
+**Prospect: Vercel**
+
+Inputs: GitHub (`github.com/vercel`), company website, free text about CI fit
+
+```
+Your Workflow SDK and Sandbox repos show you're building infrastructure that needs to be 
+rock-solid and fast to iterate on.
+
+We help teams like yours cut flaky CI and speed up merge-to-deploy — usually starting with 
+a 2-week reliability sprint that targets flaky tests, isolation, and failure patterns. 
+Typical result: 30–60% flake reduction and faster confidence on every PR.
+
+Does CI reliability ever slow down your release velocity on the platform side?
+```
+
+Specific repo names from GitHub. Offering framed as a sprint with a concrete outcome. Ends with a question tied to their actual workflow.
+
+---
+
+
 ## Snippets
 
 <img width="1638" height="665" alt="image" src="https://github.com/user-attachments/assets/5019b8f3-605c-40b9-846a-d783e9793242" />
@@ -39,32 +112,46 @@ It lets you:
 - `lib/` - auth, AI, scraping, logging, prompts, session helpers
 - `drizzle/` - migration files
 
-## What the app does
+## Project structure
 
-### Auth
+```
+├── actions/                  # Server actions, split by domain
+│   ├── offerings/            # queries, mutations, types
+│   ├── prospects/            # queries, mutations, extraction, auth, types
+│   ├── messages/
+│   └── conversations/
+├── app/
+│   ├── (auth)/               # login, signup
+│   ├── (app)/                # protected routes
+│   │   ├── dashboard/
+│   │   ├── offerings/
+│   │   ├── prompt/
+│   │   └── prospects/
+│   └── api/
+│       ├── auth/[...all]/    # Better Auth handler
+│       └── generate/         # Streaming route handler
+├── components/
+│   ├── prospects/            # Generator panel, message card, reply composer,
+│   │                         # thread view, hooks, types
+│   ├── offerings/
+│   ├── dashboard/
+│   └── ui/
+├── db/
+│   ├── schema.ts             # All tables, relations, JSONB types
+│   └── index.ts              # Lazy Drizzle client
+├── lib/
+│   ├── ai.ts                 # OpenRouter streaming
+│   ├── scraper.ts            # URL + vision extraction
+│   ├── prompts.ts            # Default prompt + builder
+│   ├── auth.ts               # Lazy Better Auth client
+│   └── logger.ts             # Structured logging
+├── drizzle/                  # Migration SQL, committed to git
+├── proxy.ts                  # Route protection middleware
+└── drizzle.config.ts
+```
 
-- `/login`
-- `/signup`
-- auth is handled by Better Auth
+---
 
-### Offerings
-
-- `/offerings`
-- `/offerings/[id]`
-- offerings describe what you sell
-- you can import content from a URL, then edit it before saving
-
-### Prompt
-
-- `/prompt`
-- lets you edit the system prompt used for generation
-
-### Prospects
-
-- `/prospects`
-- `/prospects/[id]`
-- you can add free text, URLs, or screenshots
-- the app extracts context and compiles it for generation
 
 ### Dashboard
 
@@ -76,7 +163,7 @@ It lets you:
 The app uses:
 
 - `@extractus/article-extractor` for URLs
-- OpenRouter vision models for screenshots
+- DEFAULT_VISION_MODELS = ["openrouter/free", "nvidia/nemotron-nano-12b-v2-vl:free"]
 
 If article extraction returns weak content, the app falls back to a simpler HTML cleanup path.
 
@@ -143,18 +230,15 @@ npm run migrate
 
 ### Architecture Decisions
 
-1. **Offering in system prompt, not user message** — system prompt is persistent context the model never forgets. In the user message it competes with prospect details and gets buried.
+1. **Offering in system prompt, not user message** - system prompt is persistent context the model never forgets. In the user message it competes with prospect details and can get burried
 
-2. **Screenshots via vision model, not OCR** — LinkedIn blocks scrapers. Vision model reads the image directly, returns structured context, needs no extra dependencies. `VISION_MODEL` env var keeps it independent from the generation model.
+2. **Screenshots via vision model, not OCR** - LinkedIn blocks scrapers. Vision model reads the image directly, returns structured context, needs no extra dependencies.
 
-3. **Extraction on input add, not at generation** — scrape once, store the result, reuse forever. Regenerating the same prospect costs zero scraping calls and zero rate limit risk.
+3. **Extraction on input add, not at generation** - scrape once, store the result, reuse forever. Regenerating the same prospect costs zero scraping calls and zero rate limit risk.
 
-4. **JSONB for inputs and threads** — prospect inputs vary by type and count, conversation threads are always read whole. Fixed columns mean nullable fields and migrations for every new input type. JSONB handles any combination without schema changes.
+4. **JSONB for inputs and threads** - prospect inputs vary by type and count, conversation threads are always read whole.
 
-5. **Streaming is a route handler, not a server action** — server actions return values, they can't push tokens as they arrive. Only a route handler can return a `ReadableStream` body that the client reads chunk by chunk.
-
-6. **Ownership in SQL WHERE, not application code** — every query uses `and(eq(table.id, id), eq(table.userId, userId))`. Cross-user access is blocked at the database layer. You can't forget to check it because it's baked into the query itself.
-## Notes
+5. **Streaming is a route handler, not a server action** - server actions return values, they can't push tokens as they arrive. Only a route handler can return a `ReadableStream` body that the client reads chunk by chunk.
 
 - The app is structured to keep files small and reusable.
 - Most business logic lives in `actions/`.
@@ -165,14 +249,15 @@ npm run migrate
 
 - **Drizzle + raw SQL joins** - Drizzle keeps the schema type-safe, while a few raw SQL expressions make the dashboard queries easier to express.
 - **Stored extracted context** - prospect inputs are extracted once and saved, so generation does not have to scrape again every time.
-- **add feedback loop** - this might help in better response generation
-- **folder structure** - more files, but each one is smaller and easier to understand than a set of mega files.
+- **folder structure** - i have made more files, but each one is smaller and easier to understand than a set of mega files.
 
 ## What I would do with more time
 
-- add end-to-end tests for sign-in, offering creation, prospect enrichment, generation, and replies
 - improve URL extraction for more sites
 - add a cleaner live preview when importing offering content
 - add better empty/error states in the dashboard and prospect pages
 - better frontend UI
+- add end-to-end tests for sign-in, offering creation, prospect enrichment, generation, and replies
+- add some sort of feedback loop
 - add message export features
+
