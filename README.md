@@ -16,7 +16,7 @@ It lets you:
 **Test credentials**
 ```
 email:    abc@gmail.com
-password: 12345678
+password: abcdefgh
 ```
 ## Example outputs
 
